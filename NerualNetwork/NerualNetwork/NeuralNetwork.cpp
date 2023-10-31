@@ -34,7 +34,9 @@ std::vector<double> firstLayerW;
 std::vector<double> secondLayerW;
 std::vector<double> firstLayerWeighted;
 std::vector<double> secondLayerWeighted;
-std::vector<double> weightAdjustments;
+std::vector<double>  SecondWeightAdjustments;
+std::vector<double>  FirstWeightAdjustments;
+
 std::vector<int> label1 = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 
@@ -47,7 +49,8 @@ double fixWeight(double initalValue, double outputValue, double currentLayer, do
 double xavierInitialization(int fan_in, int fan_out);
 double sumVector(std::vector<double> vector, int startAmount, int endAmount);
 void readMNISTData(std::vector<std::vector<double>>& images, std::vector<int>& labels);
-void TestNetwork(std::vector<double> image, std::vector<int> label, double& costReturn, int& result);
+void TestNetwork(std::vector<double> image, std::vector<int> label, double& costReturn, double& result);
+void AdjustWeights(std::vector<double>& weights, std::vector <double> weightAdjustments);
 
 int main()
 {
@@ -57,31 +60,52 @@ int main()
     for (int i = 0; i < secondLayerNamount * thirdLayerNamount; i++) {
         secondLayerW.push_back(xavierInitialization(secondLayerNamount, thirdLayerNamount));
     }
-    double cost;
-    int result;
+    double cost = 2;
+    double result;
     double total = 0;
     readMNISTData(images, labels);
     int i = 0;
-    while (i < images.size()) {
-        label1[labels[i]] = labels[i];
-        TestNetwork(images[i], label1, cost, result);
-        total = total + cost;
-        int j = 0;
-        int t = 0;
-        while (t < thirdLayerNamount) {
-            while (j < secondLayerW.size()) {
-                weightAdjustments.push_back(fixWeight(secondLayerW[j], thirdLayerN[t], 0.0, t));
-                j++;
+    while (cost > 0.2){
+        while (i < images.size()/6) {
+            label1[labels[i]] = 1;
+            TestNetwork(images[i], label1, cost, result);
+            total = total + cost;
+            int j = 0;
+            int t = 0;
+            int c = 0;
+            int z = 0;
+            while (t < thirdLayerNamount) {
+                while (j < secondLayerW.size()) {
+                    SecondWeightAdjustments.push_back(fixWeight(secondLayerW[j], thirdLayerN[t], 2, t));
+                    j++;
+                }
+                t++;
+
             }
-            t++;
+            while (c < secondLayerNamount) {
+                while (z < firstLayerW.size()) {
+                    FirstWeightAdjustments.push_back(fixWeight(firstLayerW[z], thirdLayerN[c], 1, c));
+                    z++;
+                }
+                c++;
+            }
+
+            i++;
+            AdjustWeights(secondLayerW, SecondWeightAdjustments);
+            AdjustWeights(firstLayerW, FirstWeightAdjustments);
+
+            SecondWeightAdjustments.clear();
+            FirstWeightAdjustments.clear();
+            firstLayerWeighted.clear();
+            secondLayerWeighted.clear();
+            secondLayerN.clear();
+            thirdLayerN.clear();
+
         }
-        i++;
-        firstLayerWeighted.clear();
-        secondLayerWeighted.clear();
-        secondLayerN.clear();
-        thirdLayerN.clear();
+        std::cout << cost << "\n";
+
     }
-    total = total / images.size();
+    total = total / images.size()/6;
     std::cout << total << "\n";
 
     std::cout << cost << "\n";
@@ -105,7 +129,13 @@ double cost(std::vector <int> target, std::vector<double> result)
 //gradient descent is not fun
 double fixWeight(double initalValue, double outputValue, double currentLayer, double currentN)
 {
-    return initalValue - (learningRate * (thirdLayerN[currentN] * (2 * (thirdLayerN[currentN] * initalValue)) - 1));
+    if (currentLayer == 2) {
+        return 0 - (learningRate * (thirdLayerN[currentN] * (2 * (thirdLayerN[currentN] * initalValue)) - 1));
+    }
+    else if (currentLayer == 1) {
+       return 0 - (learningRate * (secondLayerN[currentN] * (2 * (secondLayerN[currentN] * initalValue)) - 1));
+
+    }
 }
 double xavierInitialization(int fan_in, int fan_out) {
     // Use Xavier initialization (Glorot initialization)
@@ -145,33 +175,59 @@ double findLargest(std::vector<double> vec) {
 
     return position;
 }
-
-void TestNetwork(std::vector<double> image, std::vector<int> label, double &costReturn, int &result) {
+void AdjustWeights(std::vector<double> &weights, std::vector <double> weightAdjustments) {
+    for (int i = 0; i < weights.size(); i++) {
+        weights[i] = weights[i] + weightAdjustments[i];
+    }
+}
+void TestNetwork(std::vector<double> image, std::vector<int> label, double &costReturn, double &result) {
     firstLayerN = image;
-
-    //TODO: fix this shit completly messed up the math     new N = sum(old N x W)/total N of previous layer 
-
-    for (int i = 0; i < secondLayerNamount; i++) {
+    double total = 0;
+    //TODO: fix this shit completly messed up the math    
+    int Nmultiplier = 0;
+    while (Nmultiplier < secondLayerNamount) {
         //because of how I set everything up this multiplacation is needed (used list instead of a matrix)
-        firstLayerWeighted.push_back(sumVector(firstLayerW, firstLayerNamount * i, firstLayerNamount * (i + 1)));
+        for (int i = 0; i < firstLayerNamount; i++) {
+            total +=firstLayerN[i] * firstLayerW[i + (secondLayerNamount* Nmultiplier)];
+
+        }   
+        secondLayerN.push_back(sigmoid(total));
+        total = 0;
+        Nmultiplier++;
+        
+        
+        
+        /*firstLayerWeighted.push_back(sumVector(firstLayerW, firstLayerNamount * i, firstLayerNamount * (i + 1)));
 
 
-        secondLayerN.push_back(sigmoid(firstLayerN[i] * (firstLayerWeighted[i] / secondLayerNamount)));
+        secondLayerN.push_back(sigmoid(firstLayerN[i] * (firstLayerWeighted[i] / secondLayerNamount)));*/
     }
 
 
 
 
-    for (int i = 0; i < thirdLayerNamount; i++) {
-        int j = 0;
+    double total1 = 0;
+    //TODO: fix this shit completly messed up the math    
+    int Nmultiplier1 = 0;
+    while (Nmultiplier1 < thirdLayerNamount) {
         //because of how I set everything up this multiplacation is needed (used list instead of a matrix)
-        secondLayerWeighted.push_back(sumVector(secondLayerW, secondLayerNamount * i, secondLayerNamount * (i + 1)));
+        for (int i = 0; i < secondLayerNamount; i++) {
+            total1 += secondLayerN[i] * secondLayerW[i + (thirdLayerNamount * Nmultiplier1)];
+
+        }
+        thirdLayerN.push_back(sigmoid(total1));
+        total1 = 0;
+        Nmultiplier1++;
 
 
-        thirdLayerN.push_back(sigmoid( secondLayerN[i] * (secondLayerWeighted[i] / thirdLayerNamount)));
+
+        /*firstLayerWeighted.push_back(sumVector(firstLayerW, firstLayerNamount * i, firstLayerNamount * (i + 1)));
+
+
+        secondLayerN.push_back(sigmoid(firstLayerN[i] * (firstLayerWeighted[i] / secondLayerNamount)));*/
     }
 
-    result = findLargest(thirdLayerN);
+    result = thirdLayerN[findLargest(thirdLayerN)];
     costReturn = cost(label, thirdLayerN);
 
 }
