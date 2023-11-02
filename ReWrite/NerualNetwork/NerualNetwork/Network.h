@@ -18,7 +18,7 @@ public:
     size_t layers;
     std::vector<std::vector<std::vector<double>>> weights;
 
-    //recomended to just call intNetwork instead of setting values on your own
+    //recommended to just call intNetwork instead of setting values on your own. 
     int intNetworkObject(std::vector<std::vector<double>> images1, std::vector<int> labels1, std::vector<int> nodesPerLayer1, Network& network)
     {
         std::vector<double> temp;
@@ -26,6 +26,17 @@ public:
         network.layers = nodesPerLayer1.size();
         network.images = images1;
         network.labels = labels1;
+        intNodes(network);
+        return 0;
+    }
+
+
+
+    
+    void intNodes(const Network& network)
+    {
+        std::vector<double> temp;
+        layersValues.clear();
         for (int i = 0; i < network.layers; i++)
         {
             layersValues.push_back(temp);
@@ -34,8 +45,10 @@ public:
                 layersValues[i].push_back(0);
             }
         }
-        return 0;
     }
+
+
+
     
     int xavierIntWeights(Network& network)
     {
@@ -61,6 +74,10 @@ public:
         }
         return 0;
     }
+
+
+
+    
     int intBias(Network& network)
     {
        std::vector<double> temp;
@@ -78,6 +95,37 @@ public:
         }
         return 0;
     }
+
+
+
+    
+     void feedForward(Network& network, int imageToUse)
+    {
+        intNodes(network);
+        if (network.nodesPerLayer[0] == network.images.size())
+        {
+            return;
+        }
+        //put image into input layer
+            network.layersValues[0] = network.images[imageToUse];
+        
+        //feed forward
+        for (int i = 0; i < network.layers - 1; i++)
+        {
+            for(int j = 0; j < network.nodesPerLayer[i + 1]; j++)
+            {
+                for(int z = 0; z < network.weights[i][j].size(); z++) 
+                {
+                    network.layersValues[i + 1][j] += network.layersValues[i][z] * network.weights[i][j][z];
+                }
+                network.layersValues[i + 1][j] += network.bias[i][j];
+            }
+        }
+    }
+
+
+    
+    
 };
 double xavierInitialization(int fan_in, int fan_out) {
     // Use Xavier initialization (Glorot initialization)
@@ -89,7 +137,7 @@ double xavierInitialization(int fan_in, int fan_out) {
     std::default_random_engine generator(time(0));
     std::normal_distribution<double> distribution(0.0, stddev);
     high_resolution_clock::time_point startTime = high_resolution_clock::now();
-    while ((std::chrono::high_resolution_clock::now() - start).count() < 0) {
+    while ((std::chrono::high_resolution_clock::now() - start).count() < 1) {
         int i = 1;
         i = 0;
     }

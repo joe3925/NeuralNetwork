@@ -10,6 +10,7 @@ const std::string mnistLabelsFile = "C:\\Users\\Boden\\Documents\\NeuralNetwork\
 void readMNISTData(std::vector<std::vector<double>>&images1, std::vector<int>&labels1);
 int main()
 {
+    //read data into memory and create the network
     readMNISTData(images, labels);
     if (network.intNetworkObject(images,labels, {784,16,10},network ))
     {
@@ -27,8 +28,10 @@ int main()
         return 1;
     }
     
+    network.feedForward(network, 0);
     images.clear();
     labels.clear();
+    
     return 0;
     
 }
