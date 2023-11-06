@@ -5,32 +5,45 @@
 Network network;
 std::vector<std::vector<double>> images;
 std::vector<int> labels;
-const std::string mnistImagesFile = "C:\\Users\\Boden\\Documents\\NeuralNetwork\\ReWrite\\NerualNetwork\\TrainingData\\train-images-idx3-ubyte\\train-images.idx3-ubyte";
-const std::string mnistLabelsFile = "C:\\Users\\Boden\\Documents\\NeuralNetwork\\ReWrite\\NerualNetwork\\TrainingData\\train-labels-idx1-ubyte\\train-labels.idx1-ubyte";
+const std::string mnistImagesFile = "..\\..\\NerualNetwork\\TrainingData\\train-images-idx3-ubyte\\train-images.idx3-ubyte";
+const std::string mnistLabelsFile = "..\\..\\NerualNetwork\\TrainingData\\train-labels-idx1-ubyte\\train-labels.idx1-ubyte";
+std::vector<int> label1 = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+std::vector<int> networkArchitecture = { 784,16,10 };
 void readMNISTData(std::vector<std::vector<double>>&images1, std::vector<int>&labels1);
 int main()
 {
+
     //read data into memory and create the network
     readMNISTData(images, labels);
-    if (network.intNetworkObject(images,labels, {784,16,10},network ))
-    {
-        std::cerr<<"unknown error with network initialization";
-        return 1;
-    }
+    //intitate our network
+    network.intNetworkObject(images, labels, networkArchitecture, network);
+    images.clear();
+    labels.clear();
+    
     if (network.xavierIntWeights(network))
     {
-        std::cerr<<"Layers, nodesPerLayer or both were initialized wrong";
         return 1;
     }
     if (network.intBias(network))
     {
-        std::cerr<<"Layers, nodesPerLayer or both were initialized wrong";
         return 1;
     }
-    
-    network.feedForward(network, 0);
-    images.clear();
-    labels.clear();
+    network.exportNetwork("network.net", network);
+    for (int i = 0; i < network.images.size(); i++) {
+        network.feedForward(network, i); 
+        double total = 0;
+        label1 = { 0,0,0,0,0,0,0,0,0,0 };
+        label1[network.labels[i]] = 1;
+        for (int j = 0; j < network.nodesPerLayer[network.nodesPerLayer.size() - 1]; j++) {
+            total = total + (network.layersValuesPostActivation[network.layersValuesPostActivation.size() - 1][j] - label1[j]) * (network.layersValuesPostActivation[network.layersValuesPostActivation.size() - 1][j] - label1[j]);
+        }
+        
+        std::cout << total / network.nodesPerLayer[network.nodesPerLayer.size() - 1] << "\n";
+        std::cout << i << "\n";
+
+
+    }
+
     
     return 0;
     
@@ -59,7 +72,7 @@ int main()
 
 const int numImages = 60000;
 const int imageSize = 28 * 28;
-
+//Possible to maybe read and realease the image files one by one but im not sure of the potential preformance hit on the network so ill just preload them 
 // Read MNIST images and labels
 void readMNISTData(std::vector<std::vector<double>>& images1, std::vector<int>& labels1) {
     // Open the binary image file

@@ -1,6 +1,9 @@
 ﻿C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(531,5): warning MSB8028: The intermediate directory (x64\Debug\) contains files shared from another project (NerualNetwork.vcxproj).  This can lead to incorrect clean and rebuild behavior.
-  NeuralNetwork.cpp
-C:\Users\Boden\Documents\NeuralNetwork\NerualNetwork\NerualNetwork\NeuralNetwork.cpp(238,46): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
-C:\Users\Boden\Documents\NeuralNetwork\NerualNetwork\NerualNetwork\NeuralNetwork.cpp(351,37): warning C4244: 'argument': conversion from 'double' to 'const unsigned __int64', possible loss of data
-C:\Users\Boden\Documents\NeuralNetwork\NerualNetwork\NerualNetwork\NeuralNetwork.cpp(447,15): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-  NerualNetwork.vcxproj -> C:\Users\Boden\Documents\NeuralNetwork\NerualNetwork\x64\Debug\NeuralNetwork.exe
+  Network.cpp
+C:\Users\boden\OneDrive\Documents\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\Network.h(148,38): warning C4244: 'argument': conversion from 'double' to '_Ty', possible loss of data
+          with
+          [
+              _Ty=int
+          ]
+C:\Users\boden\OneDrive\Documents\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\Network.h(183,46): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+  NerualNetwork.vcxproj -> C:\Users\boden\OneDrive\Documents\NeuralNetwork\ReWrite\NerualNetwork\x64\Debug\NeuralNetwork.exe
