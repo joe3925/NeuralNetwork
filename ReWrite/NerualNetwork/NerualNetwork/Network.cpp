@@ -12,7 +12,6 @@ std::vector<int> networkArchitecture = { 784,16,10 };
 void readMNISTData(std::vector<std::vector<double>>&images1, std::vector<int>&labels1);
 int main()
 {
-
     //read data into memory and create the network
     readMNISTData(images, labels);
     //intitate our network

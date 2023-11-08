@@ -149,7 +149,7 @@ public:
         network.timesRan++;
 
     }
-
+     //if a file already exist this WILL overwrite the file
      void exportNetwork(std::string networkName, Network& network) {
          std::ofstream exportFile(networkName);
          //save the weights 
@@ -159,12 +159,26 @@ public:
                  exportFile << "\n";
                  for (int z = 0; z < network.weights[i][j].size(); z++) {
                      exportFile << network.weights[i][j][z];
+                     exportFile << ", ";
+
                  }
                  exportFile << "\n";
              }
              exportFile << "}";
 
          }
+         exportFile << ";";
+         for (int i = 0; i < network.bias.size(); i++) {
+             exportFile << "{";
+             exportFile << "\n";
+                 for (int j = 0; j < network.bias[i].size(); j++) {
+                     exportFile << network.bias[i][j];
+                     exportFile << ", ";
+                 }
+                 exportFile << "\n";
+                 exportFile << "}";
+         }
+
         }
      void importNetwork() {
 
@@ -211,3 +225,4 @@ double findLargest(std::vector<double> vec) {
 
     return position;
 }
+
