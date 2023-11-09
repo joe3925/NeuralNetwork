@@ -1,6 +1,7 @@
 ﻿#include "Network.h"
 #include <iostream>
 #include <fstream>
+#include <windows.h>
 
 Network network;
 std::vector<std::vector<double>> images;
@@ -15,21 +16,22 @@ int main()
     //read data into memory and create the network
     readMNISTData(images, labels);
     //intitate our network
-    network.intNetworkObject(images, labels, networkArchitecture, network);
+    intNetworkObject(images, labels, networkArchitecture, network);
     images.clear();
     labels.clear();
     
-    if (network.xavierIntWeights(network))
+    if (xavierIntWeights(network))
     {
         return 1;
     }
-    if (network.intBias(network))
+    if (intBias(network))
     {
         return 1;
     }
-    network.exportNetwork("network.net", network);
     for (int i = 0; i < network.images.size(); i++) {
-        network.feedForward(network, i); 
+        feedForward(network, i); 
+        double grad = calcGradient(network.layersValuesPreActivation[2][0], label1[0], 2, network);
+        grad;
         double total = 0;
         label1 = { 0,0,0,0,0,0,0,0,0,0 };
         label1[network.labels[i]] = 1;
