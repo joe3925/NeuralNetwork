@@ -1,0 +1,4 @@
+C:\Users\Boden\AppData\Local\JetBrains\Toolbox\apps\CLion\ch-0\232.8660.186\bin\cmake\win\x64\bin\cmake.exe -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=C:/Users/Boden/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/232.8660.186/bin/ninja/win/x64/ninja.exe -G Ninja -S C:\Users\Boden\Documents\NeuralNetwork\ReWrite -B C:\Users\Boden\Documents\NeuralNetwork\ReWrite\cmake-build-debug
+-- Configuring done (0.5s)
+-- Generating done (0.0s)
+-- Build files have been written to: C:/Users/Boden/Documents/NeuralNetwork/ReWrite/cmake-build-debug

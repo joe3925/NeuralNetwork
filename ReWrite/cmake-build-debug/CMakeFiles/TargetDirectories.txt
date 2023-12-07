@@ -1,0 +1,3 @@
+C:/Users/Boden/Documents/NeuralNetwork/ReWrite/cmake-build-debug/CMakeFiles/ReWrite.dir
+C:/Users/Boden/Documents/NeuralNetwork/ReWrite/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/Boden/Documents/NeuralNetwork/ReWrite/cmake-build-debug/CMakeFiles/rebuild_cache.dir

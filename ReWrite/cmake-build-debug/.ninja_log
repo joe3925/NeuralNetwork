@@ -1,0 +1,7 @@
+# ninja log v5
+5	1218	7212845545669980	CMakeFiles/ReWrite.dir/NerualNetwork/NerualNetwork/NeuralNetwork.cpp.obj	3e4913757bd5d2ab
+2	1783	7212910747653266	CMakeFiles/ReWrite.dir/NerualNetwork/NerualNetwork/Network.cpp.obj	ec052c21730ff267
+2	113	7212964467830037	build.ninja	1683b19882ca2608
+1785	2181	7212910751615096	ReWrite.exe	f6c300a36855032a
+3	2254	7212964765861923	CMakeFiles/ReWrite.dir/NerualNetwork/NerualNetwork/Network.cpp.obj	ec052c21730ff267
+2258	2826	7212964771537284	ReWrite.exe	f6c300a36855032a
