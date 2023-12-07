@@ -3,8 +3,8 @@
 #include <fstream>
 #include <windows.h>
 
-std::vector<std::vector<double>> images;
-std::vector<int> labels;
+auto images = std::make_unique<std::vector<std::vector<double>>>(60000, std::vector<double>(784));
+auto labels = std::make_unique<std::vector<int>>(60000);
 std::vector<std::vector<double>> testImages;
 std::vector<int> testLabels;
 const std::string mnistImagesFile = "..\\..\\NerualNetwork\\TrainingData\\train-images-idx3-ubyte\\train-images.idx3-ubyte";
@@ -16,20 +16,20 @@ bool testData = true;
 double correct;
 double wrong;
 std::vector<int> label1 = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-std::vector<int> networkArchitecture = { 784,10 };
+std::vector<int> networkArchitecture = { 784,16,10 };
 void readMNISTData(std::vector<std::vector<double>>& images1, std::vector<int>& labels1, std::string imagePath, std::string labelPath);
 void readTestMNISTData(std::vector<std::vector<double>>& images1, std::vector<int>& labels1, std::string imagePath, std::string labelPath);
 void printNumber(std::vector<double> num);
 int main()
 {
     //read data into memory and create the network
-    readMNISTData(images, labels, mnistImagesFile, mnistLabelsFile);
+    readMNISTData(*images, *labels, mnistImagesFile, mnistLabelsFile);
     //intitate our network
     Network network(images, labels, networkArchitecture);
     intNodes(network);
     printNumber(network.images[7]);
-    images.clear();
-    labels.clear();
+    images->clear();
+    labels->clear();
     
     if (xavierIntWeights(network))
     {
@@ -62,7 +62,7 @@ int main()
 
         }
         if (!(i > 10000)) {
-            backPropagate(network, 0.2);
+            backPropagate(network, 1);
         }
         std::cout << ((correct / (i + 1)) * 100) << "\n";
 
@@ -156,7 +156,7 @@ void readMNISTData(std::vector<std::vector<double>>& images1, std::vector<int>& 
             imageStream.read(reinterpret_cast<char*>(&pixel), 1);
             image[j] = static_cast<double>(pixel) / 255.0;  // Normalize pixel values to [0, 1]
         }
-        images1.push_back(image);
+        images1[i]=image;
     }
 
     // Read the MNIST label file header
@@ -167,7 +167,7 @@ void readMNISTData(std::vector<std::vector<double>>& images1, std::vector<int>& 
     for (int i = 0; i < numImages; i++) {
         unsigned char label;
         labelStream.read(reinterpret_cast<char*>(&label), 1);
-        labels1.push_back(static_cast<int>(label));
+        labels1[i] = static_cast<int>(label);
     }
 
     // Close the streams when done

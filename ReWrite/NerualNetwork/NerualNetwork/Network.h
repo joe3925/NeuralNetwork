@@ -20,6 +20,7 @@ int findSmallestPosition(const std::vector<T>& vec);
 
 class Network
 {
+
 public:
     std::vector<std::vector<double>> images;
     std::vector<int> labels;
@@ -32,15 +33,14 @@ public:
     std::vector<int> results;
     std::vector<int> currentTargetOutput;
     int timesRan = 0;
-    Network(std::vector<std::vector<double>> images1, std::vector<int>& labels1,
-        std::vector<int> nodesPerLayer1) {
-        nodesPerLayer = nodesPerLayer1;
-        layers = nodesPerLayer1.size();
-        images = images1;
-        labels = labels1;
-    }
-
-    //recommended to just call intNetwork instead of setting values on your own. 
+    Network(const std::unique_ptr<std::vector<std::vector<double>>>& images1,
+        const std::unique_ptr<std::vector<int>>& labels1,
+        const std::vector<int>& nodesPerLayer1)
+        : nodesPerLayer(nodesPerLayer1),
+        layers(nodesPerLayer1.size()),
+        images(*images1),
+        labels(*labels1)
+    {}
 };
 
 void intNodes(Network& network)
@@ -158,7 +158,6 @@ void feedForward(Network& network, int imageToUse)
 {
 
     intNodes(network);
-
     //put image into input layer
     network.layersValuesPreActivation[0] = network.images[imageToUse];
     network.layersValuesPostActivation[0] = network.images[imageToUse];
@@ -332,41 +331,6 @@ double costDerivative (double expected, double result){
     return 2*(result - expected);
 }
 
-std::vector<double> calcGradient(double expected, int weightLayer, Network& network)
-{
-
-    std::vector<double> nodeValues;
-    for(int i = 0; i < network.nodesPerLayer[network.nodesPerLayer.size() - 1]; i++){
-        int label = network.labels[i] == i + 1;
-        nodeValues.push_back(sigmoidDerivative(network.layersValuesPreActivation[network.nodesPerLayer.size() - 1][i]) * costDerivative(network.layersValuesPostActivation[network.nodesPerLayer.size() - 1][i], label));
-    }
-    return nodeValues;
-
-
-
-
-
-
-    /*
-    int i = 0;
-    int j = 1;
-    int gradient = 0;
-    //network.layersValuesPostActivation[weightLayer ][i] * sigmoidDerivative(network.layersValuesPreActivation[weightLayer][i]) * (2 * (network.layersValuesPostActivation[weightLayer ][i] - expected));
-    if(weightLayer) {
-        return network.layersValuesPostActivation[network.layers - 1][i] *
-               sigmoidDerivative(network.layersValuesPreActivation[network.layers - 1][i]) *
-               (2 * (network.layersValuesPostActivation[network.layers - 1][i] - expected));
-    }
-    else{
-        gradient = network.layersValuesPostActivation[weightLayer][i] * sigmoidDerivative(network.layersValuesPreActivation[network.layers - j][i]) * (2 * (network.layersValuesPostActivation[network.layers - j][i] - expected));
-        while (j < (weightLayer - 1)){
-            j++;
-            gradient *= sigmoidDerivative(network.layersValuesPreActivation[network.layers - j][i]) * (2 * (network.layersValuesPostActivation[network.layers - j][i] - expected)) * network.weights[weightLayer - 1][i][0];
-        }
-        return gradient;
-
-    }*/
-}
 void backPropagate(Network& network, double learningRate) {
     // Calculate output layer error
     std::vector<double> outputLayerError(network.nodesPerLayer.back());
