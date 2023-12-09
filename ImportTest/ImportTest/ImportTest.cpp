@@ -6,6 +6,7 @@
 
 const std::string mnistTestImagesFile = "..\\..\\NerualNetwork\\TrainingData\\t10k-images.idx3-ubyte";
 const std::string mnistTestLabelsFile = "..\\..\\NerualNetwork\\TrainingData\\t10k-labels.idx1-ubyte";
+const std::string networkPath = "..\\..\\ReWrite\\NerualNetwork\\NerualNetwork\\MNIST.net";
 const int imageSize = 28 * 28;
 const int numTestImages = 10000;
 void readTestMNISTData(std::vector<std::vector<double>>& images1, std::vector<int>& labels1, std::string imagePath, std::string labelPath);
@@ -17,7 +18,7 @@ int main()
 {
     readTestMNISTData(images, labels, mnistTestImagesFile, mnistTestLabelsFile);
     Network network(images, labels, {{NULL}});
-    importNetwork("MNIST.net",network);
+    importNetwork(networkPath,network);
     for (int i = 0; i < network.labels.size(); i++) {
         feedForward(network, i);
         std::cout << network.results[i] << "\n";

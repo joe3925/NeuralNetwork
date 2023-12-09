@@ -7,7 +7,7 @@ auto images = std::make_unique<std::vector<std::vector<double>>>(60000, std::vec
 auto labels = std::make_unique<std::vector<int>>(60000);
 std::vector<std::vector<double>> testImages;
 std::vector<int> testLabels;
-const double learningRate = 0.02;
+const double learningRate = 0.04;
 const std::string mnistImagesFile = "..\\..\\NerualNetwork\\TrainingData\\train-images-idx3-ubyte\\train-images.idx3-ubyte";
 const std::string mnistLabelsFile = "..\\..\\NerualNetwork\\TrainingData\\train-labels-idx1-ubyte\\train-labels.idx1-ubyte";
 const std::string mnistTestImagesFile = "..\\..\\NerualNetwork\\TrainingData\\t10k-images.idx3-ubyte";
@@ -15,9 +15,11 @@ const std::string mnistTestLabelsFile = "..\\..\\NerualNetwork\\TrainingData\\t1
 
 bool testData = true;
 double correct;
+double recentCorrect;
 double wrong;
+double recentWrong;
 std::vector<int> label1 = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-std::vector<int> networkArchitecture = { 784,10 };
+std::vector<int> networkArchitecture = { 784,32,10 };
 void readMNISTData(std::vector<std::vector<double>>& images1, std::vector<int>& labels1, std::string imagePath, std::string labelPath);
 void readTestMNISTData(std::vector<std::vector<double>>& images1, std::vector<int>& labels1, std::string imagePath, std::string labelPath);
 void printNumber(std::vector<double> num);
@@ -58,12 +60,23 @@ int main()
         if (network.results[i] == network.labels[i]) {
             std::cout << "CORRECT" << "\n";
             correct++;
+            recentCorrect++;
+
         }
         else {
             std::cout << "WRONG ):" << "\n";
             wrong++;
+            recentWrong++;
 
-        }        
+        }
+        if ((i + 1) % 100 == 0) {
+           std::cout << (76/100) * 100 << "\n";
+           if (((recentCorrect / 100) * 100) >= (97.0)) {
+                break;
+           }
+            recentCorrect = 0;
+            recentWrong = 0;
+        }
         backPropagate(network, learningRate);
         std::cout << ((correct / (i + 1)) * 100) << "\n";
 

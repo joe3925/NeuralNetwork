@@ -12,10 +12,12 @@
 using namespace std::chrono;
 double xavierInitialization(int fan_in, int fan_out);
 double sigmoid(double m1);
+
 template <typename T>
-int findLargest(std::vector<T> &vec);
+int findLargest(std::vector<T>& vec);
 template <typename T>
 int findSmallestPosition(const std::vector<T>& vec);
+
 using FunctionType = double (*)(double);
 
 
@@ -228,6 +230,7 @@ void exportNetwork(const std::string& networkName, Network& network)
         exportFile << "\n";
     }
     exportFile << "(";
+    //save bias
     for (int i = 0; i < network.bias.size(); i++)
     {
         exportFile << "\n";
@@ -266,7 +269,7 @@ void importNetwork(const std::string& path, Network& network)
     intBiasforImport(network);
     intWeights(network);
 
-
+    //rea
     if (line == "{")
     {
         while (line != "(")

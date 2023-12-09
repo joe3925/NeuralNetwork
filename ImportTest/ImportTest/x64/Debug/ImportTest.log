@@ -1,4 +1,4 @@
 ﻿  ImportTest.cpp
-C:\Users\Boden\Documents\NeuralNetwork\ImportTest\ImportTest\Network.hpp(312,46): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
-C:\Users\Boden\Documents\NeuralNetwork\ImportTest\ImportTest\Network.hpp(387,16): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-  ImportTest.vcxproj -> C:\Users\Boden\Documents\NeuralNetwork\ImportTest\x64\Debug\ImportTest.exe
+C:\Users\boden\OneDrive\Documents\NeuralNetwork\ImportTest\ImportTest\Network.hpp(312,46): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+C:\Users\boden\OneDrive\Documents\NeuralNetwork\ImportTest\ImportTest\Network.hpp(387,16): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+  ImportTest.vcxproj -> C:\Users\boden\OneDrive\Documents\NeuralNetwork\ImportTest\x64\Debug\ImportTest.exe
