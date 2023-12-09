@@ -7,6 +7,7 @@ auto images = std::make_unique<std::vector<std::vector<double>>>(60000, std::vec
 auto labels = std::make_unique<std::vector<int>>(60000);
 std::vector<std::vector<double>> testImages;
 std::vector<int> testLabels;
+const double learningRate = 0.02;
 const std::string mnistImagesFile = "..\\..\\NerualNetwork\\TrainingData\\train-images-idx3-ubyte\\train-images.idx3-ubyte";
 const std::string mnistLabelsFile = "..\\..\\NerualNetwork\\TrainingData\\train-labels-idx1-ubyte\\train-labels.idx1-ubyte";
 const std::string mnistTestImagesFile = "..\\..\\NerualNetwork\\TrainingData\\t10k-images.idx3-ubyte";
@@ -16,18 +17,20 @@ bool testData = true;
 double correct;
 double wrong;
 std::vector<int> label1 = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-std::vector<int> networkArchitecture = { 784,16,10 };
+std::vector<int> networkArchitecture = { 784,10 };
 void readMNISTData(std::vector<std::vector<double>>& images1, std::vector<int>& labels1, std::string imagePath, std::string labelPath);
 void readTestMNISTData(std::vector<std::vector<double>>& images1, std::vector<int>& labels1, std::string imagePath, std::string labelPath);
 void printNumber(std::vector<double> num);
+double relu(double x);
+double relu_derivative(double x);
 int main()
 {
     //read data into memory and create the network
     readMNISTData(*images, *labels, mnistImagesFile, mnistLabelsFile);
     //intitate our network
-    Network network(images, labels, networkArchitecture);
+    Network network(images, labels, networkArchitecture, sigmoid, sigmoidDerivative);
     intNodes(network);
-    printNumber(network.images[7]);
+    printNumber(network.images[3245]);
     images->clear();
     labels->clear();
     
@@ -60,10 +63,8 @@ int main()
             std::cout << "WRONG ):" << "\n";
             wrong++;
 
-        }
-        if (!(i > 10000)) {
-            backPropagate(network, 1);
-        }
+        }        
+        backPropagate(network, learningRate);
         std::cout << ((correct / (i + 1)) * 100) << "\n";
 
         std::cout << "\n";
@@ -232,4 +233,13 @@ void printNumber(std::vector<double> num) {
             }
            std::cout << "\n";
         }
+}
+
+double relu(double x) {
+    return ((x*-1) > 0) ? x : 0;
+}
+
+// Derivative of ReLU Function
+double relu_derivative(double x) {
+    return ((x*-1) > 0) ? 1 : 0;
 }

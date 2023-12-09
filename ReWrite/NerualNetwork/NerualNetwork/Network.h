@@ -16,10 +16,12 @@ template <typename T>
 int findLargest(std::vector<T> &vec);
 template <typename T>
 int findSmallestPosition(const std::vector<T>& vec);
+using FunctionType = double (*)(double);
 
 
 class Network
 {
+
 
 public:
     std::vector<std::vector<double>> images;
@@ -32,15 +34,23 @@ public:
     std::vector<std::vector<std::vector<double>>> weights;
     std::vector<int> results;
     std::vector<int> currentTargetOutput;
+    FunctionType activation;
+    FunctionType activationDerivative;
+
     int timesRan = 0;
     Network(const std::unique_ptr<std::vector<std::vector<double>>>& images1,
         const std::unique_ptr<std::vector<int>>& labels1,
-        const std::vector<int>& nodesPerLayer1)
+        const std::vector<int>& nodesPerLayer1,
+        FunctionType activation1, FunctionType activationDerivative1) // Add the function pointer parameter
         : nodesPerLayer(nodesPerLayer1),
         layers(nodesPerLayer1.size()),
         images(*images1),
-        labels(*labels1)
+        labels(*labels1),
+        activation(activation1),
+        activationDerivative(activationDerivative1)
     {}
+        // Initialize the function pointer  
+ 
 };
 
 void intNodes(Network& network)
@@ -81,6 +91,7 @@ int xavierIntWeights(Network& network)
     }
     for (int i = 0; i < network.layers - 1; i++)
     {
+        int currentNum = 0;
         network.weights.push_back(temp);
         for (int j = 0; j < network.nodesPerLayer[i + 1]; j++)
         {
@@ -90,6 +101,8 @@ int xavierIntWeights(Network& network)
                 network.weights[i][j].push_back(
                     xavierInitialization(network.nodesPerLayer[i], network.nodesPerLayer[i + 1]));
             }
+            currentNum++;
+            std::cout << currentNum;
         }
     }
     return 0;
@@ -122,7 +135,7 @@ int intBiasforImport(Network& network)
     std::vector<double> temp;
     if (network.layers == NULL || network.nodesPerLayer[0] == NULL || (network.layers != network.nodesPerLayer.size()))
     {
-        std::cerr << "Layers, nodesPerLayer or both were initialized wrong. Check parameters of intNetworkObject";
+        std::cerr << "Layers, nodesPerLayer or both were initialized wrong. Check constructor or if you imported assure the import wasnt corrupted";
         return 1;
     }
     for (int i = 0; i < network.layers - 1; i++)
@@ -138,7 +151,7 @@ int intBias(Network& network)
     std::vector<double> temp;
     if (network.layers == NULL || network.nodesPerLayer[0] == NULL || (network.layers != network.nodesPerLayer.size()))
     {
-        std::cerr << "Layers, nodesPerLayer or both were initialized wrong. Check parameters of intNetworkObject";
+        std::cerr << "Layers, nodesPerLayer or both were initialized wrong. Check constructor or if you imported assure the import wasnt corrupted";
         return 1;
     }
     for (int i = 0; i < network.layers - 1; i++)
@@ -158,6 +171,7 @@ void feedForward(Network& network, int imageToUse)
 {
 
     intNodes(network);
+
     //put image into input layer
     network.layersValuesPreActivation[0] = network.images[imageToUse];
     network.layersValuesPostActivation[0] = network.images[imageToUse];
@@ -172,7 +186,7 @@ void feedForward(Network& network, int imageToUse)
                     [currentLayer][currentNode][currentWeight];
             }
             network.layersValuesPreActivation[currentLayer + 1][currentNode] += network.bias[currentLayer][currentNode];
-            network.layersValuesPostActivation[currentLayer + 1][currentNode] = sigmoid(network.layersValuesPreActivation[currentLayer + 1][currentNode]);
+            network.layersValuesPostActivation[currentLayer + 1][currentNode] = network.activation(network.layersValuesPreActivation[currentLayer + 1][currentNode]);
         }
     }
     //increment times ran and give an answer 
@@ -299,7 +313,6 @@ void importNetwork(const std::string& path, Network& network)
 double xavierInitialization(int fan_in, int fan_out)
 {
     // Use Xavier initialization (Glorot initialization)
-    auto start = std::chrono::high_resolution_clock::now();
     double variance = 1.0 / (fan_in + fan_out);
     double stddev = sqrt(variance);
 
@@ -307,10 +320,10 @@ double xavierInitialization(int fan_in, int fan_out)
     std::default_random_engine generator(time(0));
     std::normal_distribution<double> distribution(0.0, stddev);
     high_resolution_clock::time_point startTime = high_resolution_clock::now();
-    /*while ((std::chrono::high_resolution_clock::now() - start).count() < 1) {
+    while ((std::chrono::high_resolution_clock::now() - startTime).count() < 1000000) {
         int i = 1;
         i = 0;
-    }*/
+    }
     return distribution(generator);
 }
 
@@ -336,7 +349,7 @@ void backPropagate(Network& network, double learningRate) {
     std::vector<double> outputLayerError(network.nodesPerLayer.back());
     for (int i = 0; i < outputLayerError.size(); i++) {
         double output = network.layersValuesPostActivation.back()[i];
-        outputLayerError[i] = (output - network.currentTargetOutput[i]) * sigmoidDerivative(output);
+        outputLayerError[i] = (output - network.currentTargetOutput[i]) * network.activationDerivative(output);
     }
 
     // Store the errors for each layer
@@ -346,11 +359,13 @@ void backPropagate(Network& network, double learningRate) {
     // Backpropagate the error
     for (int i = network.layers - 2; i >= 0; i--) {
         errors[i] = std::vector<double>(network.nodesPerLayer[i], 0.0);
-        for (int j = 0; j < network.nodesPerLayer[i]; j++) {
-            for (int k = 0; k < network.nodesPerLayer[i + 1]; k++) {
-                errors[i][j] += network.weights[i][k][j] * errors[i + 1][k];
+        for (int j = 0; j < network.nodesPerLayer[i + 1]; j++) {
+            for (int k = 0; k < network.nodesPerLayer[i]; k++) {
+                errors[i][k] += network.weights[i][j][k] * errors[i + 1][j];
             }
-            errors[i][j] *= sigmoidDerivative(network.layersValuesPostActivation[i][j]);
+        }
+        for (int j = 0; j < network.nodesPerLayer[i]; j++) {
+            errors[i][j] *= network.activationDerivative(network.layersValuesPostActivation[i][j]);
         }
     }
 
