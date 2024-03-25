@@ -24,36 +24,75 @@ using FunctionType = double (*)(double);
 class Network
 {
 
+private:
 
 public:
-    std::vector<std::vector<double>> images;
-    std::vector<int> labels;
     std::vector<int> nodesPerLayer;
     std::vector<std::vector<double>> bias;
     std::vector<std::vector<double>> layersValuesPreActivation;
     std::vector<std::vector<double>> layersValuesPostActivation;
-    size_t layers = 0;
+    std::vector<std::vector<double>> tempLayersValuesPreActivation;
+    std::vector<std::vector<double>> tempLayersValuesPostActivation;
+    int layers = 0;
     std::vector<std::vector<std::vector<double>>> weights;
     std::vector<int> results;
     std::vector<int> currentTargetOutput;
     FunctionType activation;
     FunctionType activationDerivative;
+    
 
     int timesRan = 0;
-    Network(const std::unique_ptr<std::vector<std::vector<double>>>& images1,
-        const std::unique_ptr<std::vector<int>>& labels1,
-        const std::vector<int>& nodesPerLayer1,
+    Network(const std::vector<int>& nodesPerLayer1,
         FunctionType activation1, FunctionType activationDerivative1) // Add the function pointer parameter
         : nodesPerLayer(nodesPerLayer1),
         layers(nodesPerLayer1.size()),
-        images(*images1),
-        labels(*labels1),
         activation(activation1),
         activationDerivative(activationDerivative1)
-    {}
-        // Initialize the function pointer  
+    {    }
+    void HE_initializeWeightsAndBiases() {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+
+        for (size_t i = 0; i < layers - 1; ++i) {
+            int layerInputs = nodesPerLayer[i];
+            int layerOutputs = nodesPerLayer[i + 1];
+
+            std::normal_distribution<> d(0, std::sqrt(2.0 / layerInputs));
+
+            weights.push_back(std::vector<std::vector<double>>(layerOutputs, std::vector<double>(layerInputs)));
+            bias.push_back(std::vector<double>(layerOutputs, 0.0));
+
+            for (int j = 0; j < layerOutputs; ++j) {
+                for (int k = 0; k < layerInputs; ++k) {
+                    weights[i][j][k] = d(gen);
+                }
+            }
+        }
+    }
  
 };
+void createTempWeights(Network& network)
+{
+    std::vector<double> temp;
+    network.tempLayersValuesPreActivation.clear();
+    for (int i = 0; i < network.layers; i++)
+    {
+        network.tempLayersValuesPreActivation.push_back(temp);
+        for (int j = 0; j < network.nodesPerLayer[i]; j++)
+        {
+            network.tempLayersValuesPreActivation[i].push_back(0);
+        }
+    }
+    network.tempLayersValuesPostActivation.clear();
+    for (int i = 0; i < network.layers; i++)
+    {
+        network.tempLayersValuesPostActivation.push_back(temp);
+        for (int j = 0; j < network.nodesPerLayer[i]; j++)
+        {
+            network.tempLayersValuesPostActivation[i].push_back(0);
+        }
+    }
+}
 
 void intNodes(Network& network)
 {
@@ -76,36 +115,41 @@ void intNodes(Network& network)
             network.layersValuesPostActivation[i].push_back(0);
         }
     }
+    createTempWeights(network);
+}
+void resetNodes(Network& network)
+{
+    network.layersValuesPostActivation = network.tempLayersValuesPostActivation;
+    network.layersValuesPreActivation = network.tempLayersValuesPreActivation;
+
 }
 
 
 int xavierIntWeights(Network& network)
 {
-    //temp values to resize the vectors since non const cant be passed in for size for some reason
-    //weights vector is formatted like (weights layer -> node -> weights connecting to said node)
-    std::vector<std::vector<double>> temp;
-    std::vector<double> temp1;
-    //check if values are valid
-    if (network.layers == NULL || network.nodesPerLayer[0] == NULL || (network.layers != network.nodesPerLayer.size()))
-    {
-        std::cerr << "Layers, nodesPerLayer or both were initialized wrong. Check parameters of intNetworkObject";
+    if (network.layers == 0 || network.nodesPerLayer.empty() || network.layers != network.nodesPerLayer.size()) {
+        std::cerr << "Layers, nodesPerLayer, or both were initialized wrong. Check parameters of intNetworkObject.";
         return 1;
     }
-    for (int i = 0; i < network.layers - 1; i++)
-    {
-        int currentNum = 0;
-        network.weights.push_back(temp);
-        for (int j = 0; j < network.nodesPerLayer[i + 1]; j++)
-        {
-            network.weights[i].push_back(temp1);
-            for (int z = 0; z < network.nodesPerLayer[i]; z++)
-            {
-                network.weights[i][j].push_back(
-                    xavierInitialization(network.nodesPerLayer[i], network.nodesPerLayer[i + 1]));
+
+    network.weights.clear(); // Clear existing weights
+
+    for (int i = 0; i < network.layers - 1; ++i) { // For each layer
+        std::vector<std::vector<double>> layerWeights;
+        layerWeights.resize(network.nodesPerLayer[i + 1]); // Prepare the next layer node weights container
+
+        int prevLayerNodeCount = network.nodesPerLayer[i];
+        int nextLayerNodeCount = network.nodesPerLayer[i + 1];
+
+        for (int z = 0; z < prevLayerNodeCount; ++z) { // For each weight connecting to a node
+            for (int j = 0; j < nextLayerNodeCount; ++j) { // For each node in the next layer
+                if (z == 0) { // On the first pass, initialize sub-vectors
+                    layerWeights[j] = std::vector<double>(prevLayerNodeCount);
+                }
+                layerWeights[j][z] = xavierInitialization(prevLayerNodeCount, nextLayerNodeCount);
             }
-            currentNum++;
-            std::cout << currentNum;
         }
+        network.weights.push_back(layerWeights); // Add initialized layer weights to the network
     }
     return 0;
 }
@@ -169,14 +213,14 @@ int intBias(Network& network)
 
 
 //image to use is also used to index the target
-void feedForward(Network& network, int imageToUse)
+int feedForward(Network& network, std::vector<double>& imageToUse, bool includeResult)
 {
 
-    intNodes(network);
+    resetNodes(network);
 
     //put image into input layer
-    network.layersValuesPreActivation[0] = network.images[imageToUse];
-    network.layersValuesPostActivation[0] = network.images[imageToUse];
+    network.layersValuesPreActivation[0] = imageToUse;
+    network.layersValuesPostActivation[0] = imageToUse;
     //feed forward
     for (int currentLayer = 0; currentLayer < network.layers - 1; currentLayer++)
     {
@@ -193,8 +237,11 @@ void feedForward(Network& network, int imageToUse)
     }
     //increment times ran and give an answer 
     //result is the largest value in the output layer
-    network.results.push_back(
-        findLargest(network.layersValuesPostActivation[network.layersValuesPostActivation.size() - 1]));
+    if (includeResult == true) {
+        network.results.push_back(
+            findLargest(network.layersValuesPostActivation[network.layersValuesPostActivation.size() - 1]));
+    }
+    return findLargest(network.layersValuesPostActivation[network.layersValuesPostActivation.size() - 1]);
     network.timesRan++;
 }
 
@@ -313,20 +360,23 @@ void importNetwork(const std::string& path, Network& network)
     }
 }
 
-double xavierInitialization(int fan_in, int fan_out)
-{
+double xavierInitialization(int fan_in, int fan_out) {
     // Use Xavier initialization (Glorot initialization)
     double variance = 1.0 / (fan_in + fan_out);
     double stddev = sqrt(variance);
 
-    // Generate random values with mean 0 and the calculated standard deviation
-    std::default_random_engine generator(time(0));
+    // Seed with a real random value, if available
+    std::random_device rd;
+
+    // Use a high-resolution clock to ensure different seeds when called in quick succession
+    auto seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+
+    // Combine seed from high-resolution clock and random_device
+    std::seed_seq seq{ rd(), static_cast<unsigned int>(seed) };
+    std::mt19937 generator(seq);
+
     std::normal_distribution<double> distribution(0.0, stddev);
-    high_resolution_clock::time_point startTime = high_resolution_clock::now();
-    while ((std::chrono::high_resolution_clock::now() - startTime).count() < 1000000) {
-        int i = 1;
-        i = 0;
-    }
+
     return distribution(generator);
 }
 
