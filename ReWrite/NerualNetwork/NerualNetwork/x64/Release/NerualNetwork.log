@@ -1,0 +1,25 @@
+﻿  Network.cpp
+C:\Users\boden\OneDrive\Documents\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\Network.h(48,15): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\boden\OneDrive\Documents\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\Network.h(315,48): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\boden\OneDrive\Documents\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\Network.cpp(261,19): warning C4244: 'initializing': conversion from '_Rep' to 'unsigned int', possible loss of data
+          with
+          [
+              _Rep=std::chrono::system_clock::rep
+          ]
+C:\Users\boden\OneDrive\Documents\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\Network.cpp(310,19): warning C4244: 'initializing': conversion from '_Rep' to 'unsigned int', possible loss of data
+          with
+          [
+              _Rep=std::chrono::system_clock::rep
+          ]
+C:\Users\boden\OneDrive\Documents\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\matplotlibcpp.h(1813,48): warning C4244: '=': conversion from 'size_t' to '_Ty', possible loss of data
+          with
+          [
+              _Ty=double
+          ]
+C:\Users\boden\OneDrive\Documents\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\matplotlibcpp.h(2877,12): message : see reference to function template instantiation 'bool matplotlibcpp::plot<double>(const std::vector<double,std::allocator<double>> &,const std::string &)' being compiled
+  Generating code
+  2 of 725 functions ( 0.3%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    1 functions had inline decision re-evaluated but remain unchanged
+  Finished generating code
+  NerualNetwork.vcxproj -> C:\Users\boden\OneDrive\Documents\NeuralNetwork\ReWrite\NerualNetwork\x64\Release\NeuralNetwork.exe

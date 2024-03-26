@@ -3,19 +3,23 @@
 #include <fstream>
 #include <windows.h>
 #include <threadpoolapiset.h>
+#include "matplotlibcpp.h"
 
 auto images = std::vector<std::vector<double>>(60000, std::vector<double>(784));
 auto labels = std::vector<int>(60000);
 std::vector<std::vector<double>> testImages;
 std::vector<int> testLabels;
 std::vector<bool> sample;
-const double learningRate = 0.02;
+double learningRate = 0.005;
 const std::string mnistImagesFile = "..\\..\\NerualNetwork\\TrainingData\\train-images-idx3-ubyte\\train-images.idx3-ubyte";
 const std::string mnistLabelsFile = "..\\..\\NerualNetwork\\TrainingData\\train-labels-idx1-ubyte\\train-labels.idx1-ubyte";
 const std::string mnistTestImagesFile = "..\\..\\NerualNetwork\\TrainingData\\t10k-images.idx3-ubyte";
 const std::string mnistTestLabelsFile = "..\\..\\NerualNetwork\\TrainingData\\t10k-labels.idx1-ubyte";
-const int VALIDATION_INTERVAL = 10000; // Validate every 5000 images
+const int VALIDATION_INTERVAL = 5000;
 const int VALIDATION_SET_SIZE = 10000;
+const int epochs = 10;
+std::vector<double> val;
+
 
 bool testData = true;
 
@@ -27,15 +31,20 @@ void printNumber(std::vector<double> num);
 double relu(double x);
 double relu_derivative(double x);
 double getPercentOfVector(std::vector<bool> par1);
+namespace plt = matplotlibcpp;
+
 int main()
 {
-    double correct = 0;
-    double recentCorrect = 0;
-    double wrong = 0;
-    double recentWrong = 0;
+
+    
 
     std::vector<std::vector<double>> validationImages;
     std::vector<int> validationLabels;
+    std::vector<double> cost;
+    std::vector<double> trainData;
+    std::vector<double> EpochAcc;
+
+
 
     //read data into memory and create the network
     readMNISTData(images, labels, mnistImagesFile, mnistLabelsFile);
@@ -47,10 +56,10 @@ int main()
     //intitate our network
     Network network(networkArchitecture, sigmoid, sigmoidDerivative);
     intNodes(network);
-    printNumber(images[11129]);
+    printNumber(images[45368]);
 
-    network.HE_initializeWeightsAndBiases();
-    if (false)
+
+    if (xavierIntWeights(network))
     {
         return 1;
     }
@@ -58,63 +67,82 @@ int main()
     {
         return 1;
     }
-    for (int i = 0; i < 60000; i++) {
-        label1 = { 0,0,0,0,0,0,0,0,0,0 };
-        label1[labels[i]] = 1;
-        //if ((i + 1) % VALIDATION_INTERVAL == 0) 
-        if(false)
-        {
-            double validationCorrect = 0;
-            for (int v = 0; v < validationImages.size(); v++) {
-                std::vector<int> validationLabel1 = { 0,0,0,0,0,0,0,0,0,0 };
-                validationLabel1[validationLabels[v]] = 1;
-                network.currentTargetOutput = validationLabel1;
 
-                // Check if the prediction is correct
-;
-                int predictedLabel = feedForward(network, validationImages[v], false);
-                if (predictedLabel == validationLabels[v]) {
-                    validationCorrect++;
+
+
+    for (int j = 0; j < epochs; j++)
+    {
+        double recentCorrect = 0;
+        double recentWrong = 0;
+        double sumSquaredErrors = 0;
+        double correct = 0;
+        double wrong = 0;
+
+        for (int i = 0; i < 60000; i++) {
+            label1 = { 0,0,0,0,0,0,0,0,0,0 };
+            label1[labels[i]] = 1;
+            correct = 0;
+            wrong = 0;
+
+            //validate network
+            if ((i + 1) % VALIDATION_INTERVAL == 0)
+            {
+                double validationCorrect = 0;
+                double MSE = 0;
+                for (int v = 0; v < validationImages.size(); v++) {
+                    std::vector<int> validationLabel1 = { 0,0,0,0,0,0,0,0,0,0 };
+                    validationLabel1[validationLabels[v]] = 1;
+                    network.currentTargetOutput = validationLabel1;
+
+                    // Check if the prediction is correct
+
+                    int predictedLabel = feedForward(network, validationImages[v], false);
+                    if (predictedLabel == validationLabels[v]) {
+                        validationCorrect++;
+                    }
+                    for (int z = 0; z < network.nodesPerLayer[network.nodesPerLayer.size() - 1]; z++) {
+                        MSE += (network.layersValuesPostActivation[network.nodesPerLayer.size() - 1][z] - validationLabels[z]) * (network.layersValuesPostActivation[network.nodesPerLayer.size() - 1][z] - validationLabels[z]);
+                    }
+                    cost.push_back(MSE / network.nodesPerLayer[network.nodesPerLayer.size() - 1]);
                 }
+                double validationAccuracy = (validationCorrect / validationImages.size()) * 100.0;
+                std::cout << validationAccuracy << "\n";
+                val.push_back(validationAccuracy);
+                
+                if (validationAccuracy >= 93) {
+                    goto test;
+                   // return 0;
+                }
+
             }
-            double validationAccuracy = (validationCorrect / validationImages.size()) * 100.0;
-            std::cout << "Validation Accuracy after " << i + 1 << " images: " << validationAccuracy << "%" << std::endl;
-            if (validationAccuracy >= 90.8) {
-                break;
+            //
+
+
+            network.currentTargetOutput = label1;
+            feedForward(network, images[i], true);
+
+            if (network.results[i] == labels[i]) {
+                correct++;
+
+
             }
-        }
+            else {
+                wrong++;
 
-        network.currentTargetOutput = label1;
-        feedForward(network, images[i], true);
-        double total = 0;
-        for (int j = 0; j < network.nodesPerLayer[network.nodesPerLayer.size() - 1]; j++) {
-            total = total + (network.layersValuesPostActivation[network.layersValuesPostActivation.size() - 1][j] - label1[j]) * (network.layersValuesPostActivation[network.layersValuesPostActivation.size() - 1][j] - label1[j]);
-        }
-        std::cout << total / network.nodesPerLayer[network.nodesPerLayer.size() - 1] << "\n";
-        std::cout << i << "\n";
-        if (sample.size() >= 150) {
-            sample.erase(sample.begin());
-        }
-        if (network.results[i] == labels[i]) {
-            sample.push_back(true);
-            correct++;
+            }
 
-        }
-        else {
-            sample.push_back(false);
-            wrong++;
 
-        }
-        if (getPercentOfVector(sample) >= 98.5 && i > sample.size()) {
-            break;
-        }
-        backPropagate(network, learningRate);
-        std::cout << ((correct / (i + 1)) * 100) << "\n";
 
-        std::cout << "\n";
+            backPropagate(network, learningRate);
+        }
+        EpochAcc.push_back(val[val.size() - 1]);
+        trainData.push_back(((correct / (60000 + 1)) * 100));
+        std::cout << j << "\n";
     }
+    test:
     exportNetwork("MNIST.net",network);
     if (testData == true) {
+        std::vector<double> testData;
         double correct = 0;
         double wrong = 0;
         network.results.clear();
@@ -137,9 +165,22 @@ int main()
 
             }
             std::cout << ((correct / (i + 1)) * 100) << "\n";
+            if (i % (10000 / 240) == 0) {
+                testData.push_back(((correct / (i + 1)) * 100));
+            }
 
             std::cout << "\n";
+
         }
+
+        plt::plot(val);
+        plt::plot(testData);
+        plt::figure();
+        plt::plot(trainData);
+        plt::plot(EpochAcc);
+        plt::figure();
+        plt::plot(cost);
+        plt::show();
     }
 
     
@@ -217,6 +258,10 @@ void readMNISTData(std::vector<std::vector<double>>& images1, std::vector<int>& 
     // Close the streams when done
     imageStream.close();
     labelStream.close();
+    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+    shuffle(images1.begin(), images1.end(), std::default_random_engine(seed));
+    shuffle(labels1.begin(), labels1.end(), std::default_random_engine(seed));
+
 }
 
 void readTestMNISTData(std::vector<std::vector<double>>& images1, std::vector<int>& labels1, std::string imagePath, std::string labelPath) {
@@ -262,6 +307,9 @@ void readTestMNISTData(std::vector<std::vector<double>>& images1, std::vector<in
     // Close the streams when done
     imageStream.close();
     labelStream.close();
+    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+    shuffle(images1.begin(), images1.end(), std::default_random_engine(seed));
+    shuffle(labels1.begin(), labels1.end(), std::default_random_engine(seed));
 }
 
 void printNumber(std::vector<double> num) {

@@ -402,7 +402,7 @@ void backPropagate(Network& network, double learningRate) {
     std::vector<double> outputLayerError(network.nodesPerLayer.back());
     for (int i = 0; i < outputLayerError.size(); i++) {
         double output = network.layersValuesPostActivation.back()[i];
-        outputLayerError[i] = (output - network.currentTargetOutput[i]) * network.activationDerivative(output);
+        outputLayerError[i] = (2*(output - network.currentTargetOutput[i])) * network.activationDerivative(output);
     }
 
     // Store the errors for each layer
