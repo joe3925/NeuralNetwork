@@ -8,7 +8,7 @@ const int imageSize = 28 * 28;
 const int numTestImages = 10000;
 const int VALIDATION_INTERVAL = 10000;
 const int VALIDATION_SET_SIZE = 5000;
-const int epochs = 2500;
+const int epochs = 150;
 double learningRate = 0.00017;
 
 const std::string mnistImagesFile = "../../NerualNetwork/TrainingData/train-images-idx3-ubyte/train-images.idx3-ubyte";
@@ -21,7 +21,7 @@ auto* labels = new std::vector<int>(numImages);
 auto* testImages = new std::vector<std::vector<double>>(numTestImages, std::vector<double>(imageSize));
 auto* testLabels = new std::vector<int>(numTestImages);
 
-std::vector<int> networkArchitecture = { 784,64, 10 };
+std::vector<int> networkArchitecture = { 784, 10 };
 
 void readMNISTData(std::vector<std::vector<double>>* images, std::vector<int>* labels, const std::string& imagePath, const std::string& labelPath);
 void readTestMNISTData(std::vector<std::vector<double>>* images, std::vector<int>* labels, const std::string& imagePath, const std::string& labelPath);
@@ -56,15 +56,17 @@ int main() {
     testLabels->erase(testLabels->begin(), testLabels->begin() + VALIDATION_SET_SIZE);
 
     Network network(networkArchitecture, sigmoid, sigmoidDerivative);
-    network.intNodes();
 
     // Initialize weights and biases using Xavier initialization
-    if (network.xavierIntWeights() || network.intBias()) {
+    if (network.xavierIntWeightsAndBias()) {
         return 1;
     }
 
     // Training loop for a specified number of epochs
+    auto trainingStart = std::chrono::high_resolution_clock::now();
     for (int j = 0; j < epochs; j++) {
+        auto epochStart = std::chrono::high_resolution_clock::now();
+
         double correct = 0;
         // Iterate through all training images
         for (int i = 0; i < numImages; i++) {
@@ -75,7 +77,6 @@ int main() {
             if ((i + 1) % VALIDATION_INTERVAL == 0) {
                 double validationCorrect = 0;
                 double mse = 0.0;
-                // Iterate through validation images
                 for (int v = 0; v < validationImages.size(); v++) {
                     std::vector<int> validationLabel1(10, 0);
                     validationLabel1[validationLabels[v]] = 1;
@@ -86,9 +87,8 @@ int main() {
                         validationCorrect++;
                     }
 
-                    // Calculate error for each output node
-                    for (int k = 0; k < network.getLayersValuesPostActivation().back().size(); k++) {
-                        double error = validationLabel1[k] - network.getLayersValuesPostActivation().back()[k];
+                    for (size_t k = 0; k < network.network.back().size(); ++k) {
+                        double error = validationLabel1[k] - network.network.back()[k].value;
                         mse += error * error;
                     }
                 }
@@ -97,37 +97,71 @@ int main() {
                 cost.push_back(mse);
 
                 double validationAccuracy = (validationCorrect / validationImages.size()) * 100.0;
-                std::cout << validationAccuracy << "\n";
+                std::cout << "Validation Accuracy: " << validationAccuracy << "%" << std::endl;
                 val.push_back(validationAccuracy);
 
-                // Stop training if validation accuracy reaches 93%
                 if (validationAccuracy >= 93) {
                     goto test;
                 }
-
             }
 
-            
             // Train the network on the current image
-
             network.setCurrentTargetOutput(label1);
-
             network.feedForward((*images)[i], true);
-
             if (network.results[i + j * numImages] == (*labels)[i]) {
                 correct++;
             }
             network.backPropagate(learningRate);
-            std::chrono::high_resolution_clock::time_point loopend = std::chrono::high_resolution_clock::now();
         }
-        // Store epoch accuracy and training data
+
+        // Calculate epoch accuracy and estimated time remaining
+        auto epochEnd = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> epochDuration = epochEnd - epochStart;
+        double epochTime = epochDuration.count();
         EpochAcc.push_back(val.back());
         trainData.push_back((correct / numImages) * 100);
-        std::cout << j << "\n";
+
+        // Convert epoch time to hours and minutes
+        int epochHours = static_cast<int>(epochTime) / 3600;
+        int epochMinutes = (static_cast<int>(epochTime) % 3600) / 60;
+        int epochSeconds = static_cast<int>(epochTime) % 60;
+
+        std::cout << "Epoch " << j + 1 << " completed in "
+            << epochHours << " hours, "
+            << epochMinutes << " minutes, and "
+            << epochSeconds << " seconds." << std::endl;
+
+        double timePerEpoch = epochTime;
+        double remainingTime = (epochs - (j + 1)) * timePerEpoch;
+
+        // Convert remaining time to hours and minutes
+        int remainingHours = static_cast<int>(remainingTime) / 3600;
+        int remainingMinutes = (static_cast<int>(remainingTime) % 3600) / 60;
+        int remainingSeconds = (static_cast<int>(remainingTime) % 60);
+
+
+        std::cout << "Estimated time remaining: "
+            << remainingHours << " hours,  "
+            << remainingMinutes << " minutes and " 
+            << remainingSeconds << " seconds." << std::endl;
     }
 
 test:
-    // Save the trained network to a file
+    auto trainingEnd = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> trainingDuration = trainingEnd - trainingStart;
+
+    // Convert total training time to hours and minutes
+    double trainingTime = trainingDuration.count();
+    int trainingHours = static_cast<int>(trainingTime) / 3600;
+    int trainingMinutes = (static_cast<int>(trainingTime) % 3600) / 60;
+    int trainingSeconds = (static_cast<int>(trainingTime) % 60);
+
+
+    std::cout << "Training completed in "
+        << trainingHours << " hours,  "
+        << trainingMinutes << " minutes and "
+        << trainingSeconds << " seconds." << std::endl;
+
     network.exportNetwork("MNIST.net");
 
     // Test the network on test data if enabled
@@ -137,7 +171,6 @@ test:
         network.results.clear();
         readTestMNISTData(testImages, testLabels, mnistTestImagesFile, mnistTestLabelsFile);
 
-        // Iterate through test images
         for (int i = 0; i < numTestImages; i++) {
             std::vector<int> label1(10, 0);
             label1[(*testLabels)[i]] = 1;
@@ -151,6 +184,7 @@ test:
             }
         }
     }
+
     images->clear();
     labels->clear();
     testImages->clear();
@@ -159,6 +193,7 @@ test:
     delete labels;
     delete testImages;
     delete testLabels;
+
     std::vector<int> logScaleCost(cost.size());
     for (int i = 0; i < cost.size(); ++i) {
         logScaleCost[i] = i + 1;
@@ -175,7 +210,6 @@ test:
     plt::semilogx(logScaleEpoch, trainData, "r-");
     plt::save("training_accuracy.png");
 
-    // Plot Validation Accuracy vs. Epochs
     plt::figure();
     plt::title("Validation Accuracy vs. Epochs");
     plt::xlabel("Epochs");
@@ -184,28 +218,20 @@ test:
     plt::semilogx(logScaleEpoch, EpochAcc);
     plt::save("validation_accuracy.png");
 
-    // Plot Cost vs. Epochs if cost data is available
     if (!cost.empty()) {
         plt::figure();
         plt::title("Cost vs. Epochs");
         plt::xlabel("Epochs");
         plt::ylabel("Cost");
         plt::grid(true);
-
-        // Create a vector for the x-axis (epochs)
-
-
-        // Use semilogy to plot the cost on a log scale
         plt::semilogx(logScaleCost, cost);
-
         plt::save("cost_vs_epochs.png");
     }
 
     plt::show();
-    
-
     return 0;
 }
+
 void readMNISTData(std::vector<std::vector<double>>* images, std::vector<int>* labels, const std::string& imagePath, const std::string& labelPath) {
     std::ifstream imageStream(imagePath, std::ios::binary);
     if (!imageStream) {

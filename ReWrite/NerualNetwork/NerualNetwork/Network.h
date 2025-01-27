@@ -9,36 +9,61 @@
 #include <string>
 #include "helper.h"
 
+#include <sstream>
+#include <string>
+#include <vector>
+#include <iostream>
+
 using namespace std::chrono;
 
-using FunctionType = double (*)(double);
+using activationFunc = double (*)(double);
+
+
+struct Node {
+    double value; 
+    double bias;  
+    std::vector<double> weights; // Weights of connections to next layer
+    Node(int numWeights, double biasInit = 0.0) : value(0), bias(biasInit) {
+        for (int i = 0; i < numWeights; i++) {
+            weights.push_back(0);
+        }
+    }
+};
 
 class Network
 {
+public:
+    std::vector<std::vector<Node>> network;
+
 private:
+    //
     //non accessable
+    //
     std::vector<std::vector<double>> tempLayersValuesPreActivation;
     std::vector<std::vector<double>> tempLayersValuesPostActivation;
     std::vector<std::vector<double>> bias;
 
-    std::vector<std::vector<std::vector<double>>> weights;
+    //weights are indexed such that weights[layer][node in the layer][weight coming from that node]
 
-
+    //
     //read only
-    std::vector<std::vector<double>> layersValuesPreActivation;
-    std::vector<std::vector<double>> layersValuesPostActivation;
-
-   
+    // 
+    // 
     std::vector<int> nodesPerLayer;
-
     int layers = 0;
+    activationFunc activation;
+    activationFunc activationDerivative;
+
+    //
+    // read and write
+    //
+    std::vector<int> currentTargetOutput;
+
+    //layers are indexed such that layer[layer][node in the layer]
+
+
     int timesRan = 0;
 
-    FunctionType activation;
-    FunctionType activationDerivative;
-
-    // read and write
-    std::vector<int> currentTargetOutput;
 
 
     double xavierInitialization(int fan_in, int fan_out)
@@ -64,31 +89,19 @@ private:
     {
         return 2 * (result - expected);
     }
-
-    void resetNodes()
-    {
-        for (int i = 0; i < layers; i++)
-        {
-            std::fill(layersValuesPreActivation[i].begin(), layersValuesPreActivation[i].end(), 0);
-            std::fill(layersValuesPostActivation[i].begin(), layersValuesPostActivation[i].end(), 0);
-        }
-    }
 public:
 
-
-    Network(const std::vector<int>& mNodesPerLayer, FunctionType mActivation, FunctionType mActivationDerivative)
-        : nodesPerLayer(mNodesPerLayer),
-        layers(mNodesPerLayer.size()),
-        activation(mActivation),
-        activationDerivative(mActivationDerivative)
-    {
+    Network(const std::vector<int>& nodesPerLayer, activationFunc act, activationFunc actDeriv)
+        : activation(act), activationDerivative(actDeriv) {
+        // Initialize layers
+        std::vector<Node> layer;
+        for (size_t i = 0; i < nodesPerLayer.size(); ++i) {
+            int numWeights = (i < nodesPerLayer.size() - 1) ? nodesPerLayer[i + 1] : 0;
+            network.emplace_back(nodesPerLayer[i], Node(numWeights));
+        }
     }
     //public variables
     std::vector<int> results;
-
-    //Getters 
-    std::vector<std::vector<double>> getLayersValuesPreActivation() const { return layersValuesPreActivation; }
-    std::vector<std::vector<double>> getLayersValuesPostActivation() const { return layersValuesPostActivation; }
 
     std::vector<int> getCurrentTargetOutput() const { return currentTargetOutput; }
     std::vector<int> getNodesPerLayer() const { return nodesPerLayer; }
@@ -96,355 +109,285 @@ public:
     int getLayers() const { return layers; }
     int getTimesRan() const { return timesRan; }
 
-    FunctionType getActivation() const { return activation; }
-    FunctionType getActivationDerivative() const { return activationDerivative; }
+    activationFunc getActivation() const { return activation; }
+    activationFunc getActivationDerivative() const { return activationDerivative; }
 
     // Setters
     void setCurrentTargetOutput(const std::vector<int>& newCurrentTargetOutput) {
         currentTargetOutput = newCurrentTargetOutput;
     }
 
-
-    void HE_initializeWeightsAndBiases()
-    {
+    void HE_initializeWeightsAndBiases() {
         std::random_device rd;
         std::mt19937 gen(rd());
 
-        for (size_t i = 0; i < layers - 1; ++i)
-        {
-            int layerInputs = nodesPerLayer[i];
-            int layerOutputs = nodesPerLayer[i + 1];
+        for (size_t i = 0; i < network.size() - 1; ++i) {
+            int layerInputs = network[i].size();      // Number of nodes in the current layer
+            int layerOutputs = network[i + 1].size(); // Number of nodes in the next layer
 
+            // He initialization: normal distribution with stddev = sqrt(2 / inputs)
             std::normal_distribution<> d(0, std::sqrt(2.0 / layerInputs));
 
-            weights.push_back(std::vector<std::vector<double>>(layerOutputs, std::vector<double>(layerInputs)));
-            bias.push_back(std::vector<double>(layerOutputs, 0.0));
+            for (size_t j = 0; j < network[i].size(); ++j) {
+                // Resize the weights of each node in the current layer to match the number of nodes in the next layer
+                network[i][j].weights.resize(layerOutputs);
 
-            for (int j = 0; j < layerOutputs; ++j)
-            {
-                for (int k = 0; k < layerInputs; ++k)
-                {
-                    weights[i][j][k] = d(gen);
+                for (size_t k = 0; k < layerOutputs; ++k) {
+                    // Initialize weights for connections to each node in the next layer
+                    network[i][j].weights[k] = d(gen);
                 }
             }
-        }
-    }
 
-    void intNodes()
-    {
-        std::vector<double> temp;
-        layersValuesPreActivation.clear();
-        for (int i = 0; i < layers; i++)
-        {
-            layersValuesPreActivation.push_back(temp);
-            for (int j = 0; j < nodesPerLayer[i]; j++)
-            {
-                layersValuesPreActivation[i].push_back(0);
-            }
-        }
-        layersValuesPostActivation.clear();
-        for (int i = 0; i < layers; i++)
-        {
-            layersValuesPostActivation.push_back(temp);
-            for (int j = 0; j < nodesPerLayer[i]; j++)
-            {
-                layersValuesPostActivation[i].push_back(0);
+            // Initialize biases for the nodes in the next layer
+            for (Node& node : network[i + 1]) {
+                node.bias = d(gen); // Bias is initialized separately for each node
             }
         }
     }
-
-    int xavierIntWeights()
-    {
-        if (layers == 0 || nodesPerLayer.empty() || layers != nodesPerLayer.size())
-        {
-            std::cerr << "Layers, nodesPerLayer, or both were initialized wrong. Check parameters of intNetworkObject.";
-            return 1;
+    int xavierIntWeightsAndBias() {
+        if (network.empty()) {
+            std::cerr << "Network structure is empty. Ensure nodes are properly initialized.";
+            return -1;
         }
 
-        weights.clear(); // Clear existing weights
+        for (size_t i = 0; i < network.size() - 1; ++i) { // Iterate through layers (except the last one)
+            int prevLayerNodeCount = network[i].size();      // Number of nodes in the current layer
+            int nextLayerNodeCount = network[i + 1].size();  // Number of nodes in the next layer
 
-        for (int i = 0; i < layers - 1; ++i)
-        { // For each layer
-            std::vector<std::vector<double>> layerWeights;
-            layerWeights.resize(nodesPerLayer[i + 1]); // Prepare the next layer node weights container
+            // Xavier initialization: variance = 1 / (fan_in + fan_out)
+            double variance = 1.0 / (prevLayerNodeCount + nextLayerNodeCount);
+            double stddev = std::sqrt(variance);
+            std::random_device rd;
+            std::mt19937 gen(rd());
+            std::normal_distribution<> dist(0.0, stddev);
 
-            int prevLayerNodeCount = nodesPerLayer[i];
-            int nextLayerNodeCount = nodesPerLayer[i + 1];
-
-            for (int z = 0; z < prevLayerNodeCount; ++z)
-            { // For each weight connecting to a node
-                for (int j = 0; j < nextLayerNodeCount; ++j)
-                { // For each node in the next layer
-                    if (z == 0)
-                    { // On the first pass, initialize sub-vectors
-                        layerWeights[j] = std::vector<double>(prevLayerNodeCount);
-                    }
-                    layerWeights[j][z] = xavierInitialization(prevLayerNodeCount, nextLayerNodeCount);
+            // Initialize weights and biases
+            for (size_t j = 0; j < network[i].size(); ++j) { // For each node in the current layer
+                network[i][j].weights.resize(nextLayerNodeCount); // Resize weights to match next layer size
+                for (size_t k = 0; k < nextLayerNodeCount; ++k) {
+                    network[i][j].weights[k] = dist(gen); // Initialize weight to node k in the next layer
                 }
             }
-            weights.push_back(layerWeights); // Add initialized layer weights to the network
-        }
-        return 0;
-    }
 
-    int intWeights()
-    {
-        //temp values to resize the vectors since non const cant be passed in for size for some reason
-        std::vector<std::vector<double>> temp;
-        std::vector<double> temp1;
-        //check if values are valid
-        if (layers == NULL || nodesPerLayer[0] == NULL || (layers != nodesPerLayer.size()))
-        {
-            std::cerr << "Layers, nodesPerLayer or both were initialized wrong. Check parameters of intNetworkObject";
-            return 1;
-        }
-        for (int i = 0; i < layers - 1; i++)
-        {
-            weights.push_back(temp);
-            for (int j = 0; j < nodesPerLayer[i + 1]; j++)
-            {
-                weights[i].push_back(temp1);
+            for (Node& node : network[i + 1]) { // For each node in the next layer
+                node.bias = dist(gen); // Initialize bias for the node
             }
         }
         return 0;
     }
 
-    int intBiasforImport()
-    {
-        std::vector<double> temp;
-        if (layers == NULL || nodesPerLayer[0] == NULL || (layers != nodesPerLayer.size()))
-        {
-            std::cerr << "Layers, nodesPerLayer or both were initialized wrong. Check constructor or if you imported assure the import wasnt corrupted";
-            return 1;
-        }
-        for (int i = 0; i < layers - 1; i++)
-        {
-            bias.push_back(temp);
-        }
-        return 0;
-    }
 
-    int intBias()
-    {
-        std::vector<double> temp;
-        if (layers == NULL || nodesPerLayer[0] == NULL || (layers != nodesPerLayer.size()))
-        {
-            std::cerr << "Layers, nodesPerLayer or both were initialized wrong. Check constructor or if you imported assure the import wasnt corrupted";
-            return 1;
+    int feedForward(const std::vector<double>& imageToUse, bool includeResult) {
+        if (network.empty() || network[0].size() != imageToUse.size()) {
+            std::cerr << "Input size does not match the number of nodes in the input layer.";
+            return -1; // Error code
         }
-        for (int i = 0; i < layers - 1; i++)
-        {
-            bias.push_back(temp);
-            for (int j = 0; j < nodesPerLayer[i + 1]; j++)
-            {
-                bias[i].push_back(0.0);
+
+        for (auto& layer : network) {
+            for (auto& node : layer) {
+                node.value = 0.0;
             }
         }
-        return 0;
-    }
 
-    //image to use is also used to index the target
-    int feedForward(std::vector<double>& imageToUse, bool includeResult)
-    {
-        resetNodes();
+        for (size_t i = 0; i < imageToUse.size(); ++i) {
+            network[0][i].value = imageToUse[i];
+        }
 
-        //put image into input layer
-        layersValuesPreActivation[0] = imageToUse;
-        layersValuesPostActivation[0] = imageToUse;
-        //feed forward
-        for (int currentLayer = 0; currentLayer < layers - 1; currentLayer++)
-        {
-            for (int currentNode = 0; currentNode < nodesPerLayer[currentLayer + 1]; currentNode++)
-            {
-                for (int currentWeight = 0; currentWeight < weights[currentLayer][currentNode].size(); currentWeight++)
-                {
-                    layersValuesPreActivation[currentLayer + 1][currentNode] += layersValuesPreActivation[currentLayer][currentWeight] * weights[currentLayer][currentNode][currentWeight];
+        for (size_t currentLayer = 0; currentLayer < network.size() - 1; ++currentLayer) {
+            for (size_t currentNode = 0; currentNode < network[currentLayer].size(); ++currentNode) {
+                const Node& currentNodeObj = network[currentLayer][currentNode];
+                for (size_t nextNode = 0; nextNode < network[currentLayer + 1].size(); ++nextNode) {
+                    // Add weighted value to the next node
+                    network[currentLayer + 1][nextNode].value += currentNodeObj.value * currentNodeObj.weights[nextNode];
                 }
-                layersValuesPreActivation[currentLayer + 1][currentNode] += bias[currentLayer][currentNode];
-                layersValuesPostActivation[currentLayer + 1][currentNode] = activation(layersValuesPreActivation[currentLayer + 1][currentNode]);
+            }
+
+            // Apply activation function and add bias to the next layer
+            for (Node& nextNode : network[currentLayer + 1]) {
+                nextNode.value = activation(nextNode.value + nextNode.bias);
             }
         }
-        //result is the largest value in the output layer
-        if (includeResult == true)
-        {
-            results.push_back(findLargest(layersValuesPostActivation[layersValuesPostActivation.size() - 1]));
+
+        const std::vector<Node>& outputLayer = network.back();
+        int resultIndex = 0;
+        double maxValue = outputLayer[0].value;
+
+        for (size_t i = 1; i < outputLayer.size(); ++i) {
+            if (outputLayer[i].value > maxValue) {
+                maxValue = outputLayer[i].value;
+                resultIndex = static_cast<int>(i);
+            }
         }
-        return findLargest(layersValuesPostActivation[layersValuesPostActivation.size() - 1]);
+
+        if (includeResult) {
+            results.push_back(resultIndex);
+        }
+
         timesRan++;
+        return resultIndex;
     }
 
-    //if a file already exist this WILL overwrite the file
-    void exportNetwork(const std::string& networkName)
-    {
+
+    void exportNetwork(const std::string& networkName) {
         std::ofstream exportFile(networkName);
-        //save the weights
-        for (int i = 0; i < nodesPerLayer.size(); i++)
-        {
-            exportFile << nodesPerLayer[i];
-            exportFile << "\n";
+        if (!exportFile.is_open()) {
+            std::cerr << "Failed to open file for export: " << networkName << std::endl;
+            return;
         }
-        for (int i = 0; i < weights.size(); i++)
-        {
-            exportFile << "{";
-            for (int j = 0; j < weights[i].size(); j++)
-            {
-                exportFile << "\n";
-                for (int z = 0; z < weights[i][j].size(); z++)
-                {
-                    exportFile << weights[i][j][z];
-                    if (z == weights[i][j].size() - 1)
-                    {
-                        exportFile << "\n";
-                        exportFile << ";";
-                        break;
+
+        // Save the number of nodes per layer
+        for (const auto& layer : network) {
+            exportFile << layer.size() << "\n";
+        }
+
+        // Save weights and biases
+        exportFile << "{\n";
+        for (size_t i = 0; i < network.size() - 1; ++i) {
+            for (size_t j = 0; j < network[i].size(); ++j) {
+                exportFile << "["; // Begin weights for the current node
+                for (size_t k = 0; k < network[i][j].weights.size(); ++k) {
+                    exportFile << network[i][j].weights[k];
+                    if (k < network[i][j].weights.size() - 1) {
+                        exportFile << ", ";
                     }
-                    exportFile << "\n";
                 }
-            }
-            exportFile << "}";
-            exportFile << "\n";
-        }
-        exportFile << "(";
-        //save bias
-        for (int i = 0; i < bias.size(); i++)
-        {
-            exportFile << "\n";
-            for (int j = 0; j < bias[i].size(); j++)
-            {
-                exportFile << bias[i][j];
-                if (j == bias[i].size() - 1)
-                {
-                    exportFile << "\n";
-                    exportFile << ";";
-                    break;
-                }
-                exportFile << "\n";
+                exportFile << "]\n"; // End weights for the current node
             }
         }
-        exportFile << ")";
+        exportFile << "}\n";
+
+        exportFile << "(\n";
+        for (size_t i = 1; i < network.size(); ++i) { // Start from layer 1 (biases are not in input layer)
+            for (const Node& node : network[i]) {
+                exportFile << node.bias << "\n";
+            }
+        }
+        exportFile << ")\n";
+
+        exportFile.close();
     }
 
-    void importNetwork(const std::string& path)
-    {
-        //counters
-        int currentLayer = 0;
-        int currentNode = 0;
-        int currentBiasLayer = 0;
+
+    void importNetwork(const std::string& path) {
+        std::ifstream file(path);
+        if (!file.is_open()) {
+            std::cerr << "Failed to open file for import: " << path << std::endl;
+            return;
+        }
+
+        network.clear(); // Clear existing network structure
 
         std::string line;
-        std::ifstream file(path);
-        getline(file, line);
-        while (line != "{")
-        {
-            nodesPerLayer.push_back(stoi(line));
-            getline(file, line);
-        }
-        intNodes();
-        layers = nodesPerLayer.size();
-        intBiasforImport();
-        intWeights();
+        std::vector<int> nodesPerLayer;
 
-        //read accoring to the format of the export
-        if (line == "{")
-        {
-            while (line != "(")
-            {
-                getline(file, line);
-                if (line == "}")
-                {
-                    currentLayer++;
-                }
-                else if (line == ";")
-                {
-                    currentNode++;
-                }
-                else if (line == ";}")
-                {
-                    currentLayer++;
-                    currentNode = 0;
-                    getline(file, line);
-                }
-                else
-                {
-                    weights[currentLayer][currentNode].push_back(std::stod(line));
-                }
+        // Read nodes per layer
+        while (std::getline(file, line) && line != "{") {
+            nodesPerLayer.push_back(std::stoi(line));
+        }
+
+        // Initialize network structure
+        for (int numNodes : nodesPerLayer) {
+            network.emplace_back();
+            for (int i = 0; i < numNodes; ++i) {
+                network.back().emplace_back(numNodes > 1 ? nodesPerLayer.back() : 0);
             }
-            while (true)
-            {
-                getline(file, line);
-                if (line == ";")
-                {
-                    currentBiasLayer++;
-                }
-                else if (line == ";)")
-                {
-                    break;
-                }
-                else
-                {
-                    bias[currentBiasLayer].push_back(stod(line));
+        }
+
+        // Read weights
+        size_t currentLayer = 0;
+        size_t currentNode = 0;
+
+        if (line == "{") {
+            while (std::getline(file, line) && line != "}") {
+                if (line[0] == '[') {
+                    line = line.substr(1, line.size() - 2); // Remove brackets
+                    std::stringstream ss(line);
+                    std::string weight;
+                    while (std::getline(ss, weight, ',')) {
+                        network[currentLayer][currentNode].weights.push_back(std::stod(weight));
+                    }
+                    currentNode++;
+                    if (currentNode >= network[currentLayer].size()) {
+                        currentNode = 0;
+                        currentLayer++;
+                    }
                 }
             }
         }
+
+        // Read biases
+        currentLayer = 1; // Skip input layer (no biases)
+        if (std::getline(file, line) && line == "(") {
+            while (std::getline(file, line) && line != ")") {
+                for (Node& node : network[currentLayer]) {
+                    node.bias = std::stod(line);
+                    if (!std::getline(file, line) || line == ")") break;
+                }
+                currentLayer++;
+            }
+        }
+
+        file.close();
     }
 
-    void backPropagate(double learningRate)
-    {
+    void backPropagate(double learningRate) {
+        if (currentTargetOutput.size() != network.back().size()) {
+            std::cerr << "Target output size does not match the number of output nodes." << std::endl;
+            return;
+        }
+
         // Calculate output layer error
-        std::vector<double> outputLayerError(nodesPerLayer.back());
-        for (int i = 0; i < outputLayerError.size(); i++)
-        {
-            double output = layersValuesPostActivation.back()[i];
+        std::vector<double> outputLayerError(network.back().size());
+        for (size_t i = 0; i < network.back().size(); ++i) {
+            double output = network.back()[i].value;
             outputLayerError[i] = (2 * (output - currentTargetOutput[i])) * activationDerivative(output);
         }
 
         // Store the errors for each layer
-        std::vector<std::vector<double>> errors(layers);
+        std::vector<std::vector<double>> errors(network.size());
         errors.back() = outputLayerError;
 
         // Backpropagate the error
-        for (int i = layers - 2; i >= 0; i--)
-        {
-            errors[i] = std::vector<double>(nodesPerLayer[i], 0.0);
-            for (int j = 0; j < nodesPerLayer[i + 1]; j++)
-            {
-                for (int k = 0; k < nodesPerLayer[i]; k++)
-                {
-                    errors[i][k] += weights[i][j][k] * errors[i + 1][j];
+        for (int layerIdx = network.size() - 2; layerIdx >= 0; --layerIdx) {
+            errors[layerIdx].resize(network[layerIdx].size(), 0.0);
+
+            for (size_t nodeIdx = 0; nodeIdx < network[layerIdx].size(); ++nodeIdx) {
+                for (size_t nextNodeIdx = 0; nextNodeIdx < network[layerIdx + 1].size(); ++nextNodeIdx) {
+                    errors[layerIdx][nodeIdx] +=
+                        network[layerIdx][nodeIdx].weights[nextNodeIdx] * errors[layerIdx + 1][nextNodeIdx];
                 }
-            }
-            for (int j = 0; j < nodesPerLayer[i]; j++)
-            {
-                errors[i][j] *= activationDerivative(layersValuesPostActivation[i][j]);
+                errors[layerIdx][nodeIdx] *= activationDerivative(network[layerIdx][nodeIdx].value);
             }
         }
 
         // Update weights and biases
-        for (int i = 0; i < layers - 1; i++)
-        {
-            for (int j = 0; j < nodesPerLayer[i + 1]; j++)
-            {
-                // Update bias
-                bias[i][j] -= learningRate * errors[i + 1][j];
-                for (int k = 0; k < nodesPerLayer[i]; k++)
-                {
+        for (size_t layerIdx = 0; layerIdx < network.size() - 1; ++layerIdx) {
+            for (size_t nodeIdx = 0; nodeIdx < network[layerIdx].size(); ++nodeIdx) {
+                for (size_t nextNodeIdx = 0; nextNodeIdx < network[layerIdx + 1].size(); ++nextNodeIdx) {
                     // Update weight
-                    weights[i][j][k] -= learningRate * layersValuesPostActivation[i][k] * errors[i + 1][j];
+                    network[layerIdx][nodeIdx].weights[nextNodeIdx] -=
+                        learningRate * network[layerIdx][nodeIdx].value * errors[layerIdx + 1][nextNodeIdx];
                 }
+            }
+
+            for (size_t nextNodeIdx = 0; nextNodeIdx < network[layerIdx + 1].size(); ++nextNodeIdx) {
+                // Update bias
+                network[layerIdx + 1][nextNodeIdx].bias -= learningRate * errors[layerIdx + 1][nextNodeIdx];
             }
         }
     }
-    void cleanNetwork()
-	{
-		layersValuesPreActivation.clear();
-		layersValuesPostActivation.clear();
-		weights.clear();
-		bias.clear();
-		nodesPerLayer.clear();
-		currentTargetOutput.clear();
-		results.clear();
-		layers = 0;
-		timesRan = 0;
-	}
+
+    void cleanNetwork() {
+        for (auto& layer : network) {
+            for (auto& node : layer) {
+                node.value = 0.0;
+                node.bias = 0.0;
+                std::fill(node.weights.begin(), node.weights.end(), 0.0);
+            }
+        }
+        currentTargetOutput.clear();
+        results.clear();
+        timesRan = 0;
+    }
 
 };

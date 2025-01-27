@@ -1,21 +1,37 @@
 ﻿C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(531,5): warning MSB8028: The intermediate directory (x64\Debug\) contains files shared from another project (NerualNetwork.vcxproj).  This can lead to incorrect clean and rebuild behavior.
   Network.cpp
-C:\Users\Boden\Documents\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\Network.h(48,15): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\Boden\Documents\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\Network.h(315,48): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\Boden\Documents\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\Network.cpp(261,19): warning C4244: 'initializing': conversion from '_Rep' to 'unsigned int', possible loss of data
-          with
-          [
-              _Rep=std::chrono::system_clock::rep
-          ]
-C:\Users\Boden\Documents\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\Network.cpp(310,19): warning C4244: 'initializing': conversion from '_Rep' to 'unsigned int', possible loss of data
-          with
-          [
-              _Rep=std::chrono::system_clock::rep
-          ]
-C:\Users\Boden\Documents\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\matplotlibcpp.h(1813,48): warning C4244: '=': conversion from 'size_t' to '_Ty', possible loss of data
-          with
-          [
-              _Ty=double
-          ]
-C:\Users\Boden\Documents\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\matplotlibcpp.h(2877,12): message : see reference to function template instantiation 'bool matplotlibcpp::plot<double>(const std::vector<double,std::allocator<double>> &,const std::string &)' being compiled
+C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\Network.h(81,15): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+  (compiling source file 'Network.cpp')
+  
+C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\Network.h(343,36): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+  (compiling source file 'Network.cpp')
+  
+C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\Network.cpp(247,19): warning C4244: 'initializing': conversion from '_Rep' to 'unsigned int', possible loss of data
+C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\Network.cpp(247,19): warning C4244:         with
+C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\Network.cpp(247,19): warning C4244:         [
+C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\Network.cpp(247,19): warning C4244:             _Rep=std::chrono::system_clock::rep
+C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\Network.cpp(247,19): warning C4244:         ]
+C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\Network.cpp(290,19): warning C4244: 'initializing': conversion from '_Rep' to 'unsigned int', possible loss of data
+C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\Network.cpp(290,19): warning C4244:         with
+C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\Network.cpp(290,19): warning C4244:         [
+C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\Network.cpp(290,19): warning C4244:             _Rep=std::chrono::system_clock::rep
+C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\Network.cpp(290,19): warning C4244:         ]
+C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\helper.h(7,25): warning C4244: 'return': conversion from '__int64' to 'int', possible loss of data
+  (compiling source file 'Network.cpp')
+  C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\helper.h(7,25):
+  the template instantiation context (the oldest one first) is
+  	C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\Network.h(270,31):
+  	see reference to function template instantiation 'int findLargest<double>(const std::vector<double,std::allocator<double>> &)' being compiled
+  
+C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\matplotlibcpp.h(1813,48): warning C4244: '=': conversion from 'size_t' to '_Ty', possible loss of data
+C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\matplotlibcpp.h(1813,48): warning C4244:         with
+C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\matplotlibcpp.h(1813,48): warning C4244:         [
+C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\matplotlibcpp.h(1813,48): warning C4244:             _Ty=double
+C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\matplotlibcpp.h(1813,48): warning C4244:         ]
+  (compiling source file 'Network.cpp')
+  C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\matplotlibcpp.h(1813,48):
+  the template instantiation context (the oldest one first) is
+  	C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\matplotlibcpp.h(2877,12):
+  	see reference to function template instantiation 'bool matplotlibcpp::plot<double>(const std::vector<double,std::allocator<double>> &,const std::string &)' being compiled
+  
 LINK : fatal error LNK1104: cannot open file 'python310_d.lib'
