@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="cuda">
+      <UniqueIdentifier>{a5207064-7fda-40e2-9a91-e10f88491dd3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Network.cpp">
@@ -26,5 +29,16 @@
     <ClInclude Include="helper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="cuda files\memoryUtils.cuh">
+      <Filter>cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="cuda files\feedforward.cuh">
+      <Filter>cuda</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="cuda files\feedforward.cu">
+      <Filter>cuda</Filter>
+    </CudaCompile>
   </ItemGroup>
 </Project>

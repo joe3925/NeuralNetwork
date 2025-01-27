@@ -58,6 +58,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 12.3.props" />
   </ImportGroup>
   <ImportGroup Label="Shared">
   </ImportGroup>
@@ -152,7 +153,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>"C:\Users\boden\AppData\Local\Programs\Python\Python310\include";"C:\Users\boden\AppData\Local\Programs\Python\Python310\Lib\site-packages\numpy\core\include";</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>"C:\Users\boden\AppData\Local\Programs\Python\Python310\include";"C:\Users\boden\AppData\Local\Programs\Python\Python310\Lib\site-packages\numpy\core\include";$(CUDA_PATH)\include;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -166,10 +167,16 @@
     <ClCompile Include="Network.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="cuda files\feedforward.cuh" />
+    <ClInclude Include="cuda files\memoryUtils.cuh" />
     <ClInclude Include="helper.h" />
     <ClInclude Include="Network.h" />
   </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="cuda files\feedforward.cu" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 12.3.targets" />
   </ImportGroup>
 </Project>

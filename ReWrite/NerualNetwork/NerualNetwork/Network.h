@@ -8,27 +8,18 @@
 #include <iostream>
 #include <string>
 #include "helper.h"
-
 #include <sstream>
 #include <string>
 #include <vector>
 #include <iostream>
-
+#include "cuda files/feedforward.cuh"
+#
 using namespace std::chrono;
 
 using activationFunc = double (*)(double);
 
 
-struct Node {
-    double value; 
-    double bias;  
-    std::vector<double> weights; // Weights of connections to next layer
-    Node(int numWeights, double biasInit = 0.0) : value(0), bias(biasInit) {
-        for (int i = 0; i < numWeights; i++) {
-            weights.push_back(0);
-        }
-    }
-};
+
 
 class Network
 {
@@ -36,35 +27,25 @@ public:
     std::vector<std::vector<Node>> network;
 
 private:
-    //
-    //non accessable
-    //
+
     std::vector<std::vector<double>> tempLayersValuesPreActivation;
     std::vector<std::vector<double>> tempLayersValuesPostActivation;
     std::vector<std::vector<double>> bias;
 
-    //weights are indexed such that weights[layer][node in the layer][weight coming from that node]
 
-    //
-    //read only
-    // 
-    // 
     std::vector<int> nodesPerLayer;
     int layers = 0;
     activationFunc activation;
     activationFunc activationDerivative;
 
-    //
-    // read and write
-    //
-    std::vector<int> currentTargetOutput;
 
-    //layers are indexed such that layer[layer][node in the layer]
+    std::vector<int> currentTargetOutput;
 
 
     int timesRan = 0;
 
-
+    bool mUse_gpu;
+    DeviceNetwork device_network;
 
     double xavierInitialization(int fan_in, int fan_out)
     {
@@ -91,13 +72,20 @@ private:
     }
 public:
 
-    Network(const std::vector<int>& nodesPerLayer, activationFunc act, activationFunc actDeriv)
-        : activation(act), activationDerivative(actDeriv) {
+    Network(const std::vector<int>& nodesPerLayer, bool use_gpu, activationFunc act, activationFunc actDeriv)
+        : activation(act), activationDerivative(actDeriv), nodesPerLayer(nodesPerLayer) {
         // Initialize layers
         std::vector<Node> layer;
         for (size_t i = 0; i < nodesPerLayer.size(); ++i) {
             int numWeights = (i < nodesPerLayer.size() - 1) ? nodesPerLayer[i + 1] : 0;
             network.emplace_back(nodesPerLayer[i], Node(numWeights));
+        }
+        if (use_gpu) {
+            mUse_gpu = true;
+            loadNetwork(network, device_network);
+        }
+        else {
+            mUse_gpu = false;
         }
     }
     //public variables
@@ -181,6 +169,9 @@ public:
         if (network.empty() || network[0].size() != imageToUse.size()) {
             std::cerr << "Input size does not match the number of nodes in the input layer.";
             return -1; // Error code
+        }
+        if (mUse_gpu) {
+            return feedForwardCUDA(device_network, imageToUse, nodesPerLayer.size(), findLargest(nodesPerLayer));
         }
 
         for (auto& layer : network) {
@@ -378,6 +369,12 @@ public:
     }
 
     void cleanNetwork() {
+        int sum = 0;
+        for (int i = 0; i < nodesPerLayer.size(); i++) {
+            sum += nodesPerLayer[i];
+        }
+        freeNetwork(device_network);
+        timesRan = 0;
         for (auto& layer : network) {
             for (auto& node : layer) {
                 node.value = 0.0;
@@ -387,7 +384,7 @@ public:
         }
         currentTargetOutput.clear();
         results.clear();
-        timesRan = 0;
+
     }
 
 };

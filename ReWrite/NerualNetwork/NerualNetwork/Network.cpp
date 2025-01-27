@@ -21,7 +21,7 @@ auto* labels = new std::vector<int>(numImages);
 auto* testImages = new std::vector<std::vector<double>>(numTestImages, std::vector<double>(imageSize));
 auto* testLabels = new std::vector<int>(numTestImages);
 
-std::vector<int> networkArchitecture = { 784, 10 };
+std::vector<int> networkArchitecture = { 784,256,128, 10 };
 
 void readMNISTData(std::vector<std::vector<double>>* images, std::vector<int>* labels, const std::string& imagePath, const std::string& labelPath);
 void readTestMNISTData(std::vector<std::vector<double>>* images, std::vector<int>* labels, const std::string& imagePath, const std::string& labelPath);
@@ -55,7 +55,7 @@ int main() {
     testImages->erase(testImages->begin(), testImages->begin() + VALIDATION_SET_SIZE);
     testLabels->erase(testLabels->begin(), testLabels->begin() + VALIDATION_SET_SIZE);
 
-    Network network(networkArchitecture, sigmoid, sigmoidDerivative);
+    Network network(networkArchitecture, true, relu, relu_derivative);
 
     // Initialize weights and biases using Xavier initialization
     if (network.xavierIntWeightsAndBias()) {
