@@ -5,7 +5,11 @@
 
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
+#include <cuda.h>
+
 #include <iostream>
+
+#include "../helper.h"
 struct Node {
     double value;
     double bias;
@@ -20,8 +24,9 @@ struct Node {
 struct DeviceNetwork {
     double* values;    // Flattened node values
     double* biases;    // Flattened biases
-    double* weights;   // Flattened weights
+    double* weights;   // Flattened weights]
     int* layerSizes;   // Number of nodes per layer
+    int* targetOutput; //only used to backprop contains the target output of the network
     int totalLayers;   // Total number of layers
 };
 struct DeviceNode {
@@ -30,93 +35,82 @@ struct DeviceNode {
     double bias;
 };
 
-inline int loadNetwork(const std::vector<std::vector<Node>>& network, DeviceNetwork& d_network) {
-    // Calculate the total number of nodes and weights
+#if defined(__CUDA_ARCH__) && __CUDA_ARCH__ < 600
+static __inline__ __device__ double atomicAdd(double* address, double val) {
+    unsigned long long int* address_as_ull = (unsigned long long int*)address;
+    unsigned long long int old = *address_as_ull, assumed;
+    if (val == 0.0)
+        return __longlong_as_double(old);
+    do {
+        assumed = old;
+        old = atomicCAS(address_as_ull, assumed, __double_as_longlong(val + __longlong_as_double(assumed)));
+    } while (assumed != old);
+    return __longlong_as_double(old);
+}
+#endif
+typedef double (*DeviceActivationFunc)(double);
+__device__ DeviceActivationFunc activation = nullptr;
+__device__ DeviceActivationFunc activationDerivative = nullptr;
+
+__global__ void setActivationFunctions(DeviceActivationFunc act, DeviceActivationFunc actDeriv);
+
+void setActivation(DeviceActivationFunc act, DeviceActivationFunc actDeriv);
+
+inline int loadNetwork(const std::vector<std::vector<Node>>& network, DeviceNetwork& deviceNetwork) {
     int totalNodes = 0;
     int totalWeights = 0;
+
+    // Calculate total nodes and weights
     for (size_t i = 0; i < network.size(); ++i) {
         totalNodes += network[i].size();
-        if (i < network.size() - 1) { // Skip weights for the last layer
+        if (i < network.size() - 1) {
             totalWeights += network[i].size() * network[i + 1].size();
         }
     }
 
-    // Allocate flattened arrays on the device
-    cudaError_t status = cudaMalloc((void**)&d_network.values, totalNodes * sizeof(double));
-    if (status != cudaSuccess) {
-        std::cerr << "cudaMalloc failed for values: " << cudaGetErrorString(status) << std::endl;
-        return -1;
-    }
+    // Allocate device memory
+    CUDA_CHECK_AND_FAULT(cudaMalloc((void**)&deviceNetwork.values, totalNodes * sizeof(double)));
+    CUDA_CHECK_AND_FAULT(cudaMalloc((void**)&deviceNetwork.biases, totalNodes * sizeof(double)));
+    CUDA_CHECK_AND_FAULT(cudaMalloc((void**)&deviceNetwork.weights, totalWeights * sizeof(double)));
+    CUDA_CHECK_AND_FAULT(cudaMalloc((void**)&deviceNetwork.layerSizes, network.size() * sizeof(int)));
+    CUDA_CHECK_AND_FAULT(cudaMalloc((void**)&deviceNetwork.targetOutput, network.size() * sizeof(int)));
 
-    status = cudaMalloc((void**)&d_network.biases, totalNodes * sizeof(double));
-    if (status != cudaSuccess) {
-        std::cerr << "cudaMalloc failed for biases: " << cudaGetErrorString(status) << std::endl;
-        cudaFree(d_network.values);
-        return -1;
-    }
-
-    status = cudaMalloc((void**)&d_network.weights, totalWeights * sizeof(double));
-    if (status != cudaSuccess) {
-        std::cerr << "cudaMalloc failed for weights: " << cudaGetErrorString(status) << std::endl;
-        cudaFree(d_network.values);
-        cudaFree(d_network.biases);
-        return -1;
-    }
-
-    status = cudaMalloc((void**)&d_network.layerSizes, network.size() * sizeof(int));
-    if (status != cudaSuccess) {
-        std::cerr << "cudaMalloc failed for layerSizes: " << cudaGetErrorString(status) << std::endl;
-        cudaFree(d_network.values);
-        cudaFree(d_network.biases);
-        cudaFree(d_network.weights);
-        return -1;
-    }
-
-    d_network.totalLayers = static_cast<int>(network.size());
-
-    // Host-side flattened arrays
+    // Flatten and copy data to device
     std::vector<double> h_values(totalNodes, 0.0);
     std::vector<double> h_biases(totalNodes, 0.0);
     std::vector<double> h_weights(totalWeights, 0.0);
     std::vector<int> h_layerSizes(network.size());
 
-    // Flatten the network into arrays
-    int valueIndex = 0;
-    int weightIndex = 0;
+    int nodeOffset = 0;
+    int weightOffset = 0;
     for (size_t i = 0; i < network.size(); ++i) {
-        h_layerSizes[i] = static_cast<int>(network[i].size());
-        for (const Node& node : network[i]) {
-            h_values[valueIndex] = node.value;
-            h_biases[valueIndex] = node.bias;
-            if (i < network.size() - 1) { // Add weights for intermediate layers
-                for (double weight : node.weights) {
-                    h_weights[weightIndex++] = weight;
+        h_layerSizes[i] = network[i].size();
+
+        for (size_t j = 0; j < network[i].size(); ++j) {
+            h_values[nodeOffset] = network[i][j].value;
+            h_biases[nodeOffset] = network[i][j].bias;
+
+            if (i < network.size() - 1) {
+                for (size_t k = 0; k < network[i + 1].size(); ++k) {
+                    h_weights[weightOffset] = network[i][j].weights[k];
+                    weightOffset++;
                 }
             }
-            ++valueIndex;
+            nodeOffset++;
         }
     }
 
-    // Copy flattened arrays to device memory
-    cudaMemcpy(d_network.values, h_values.data(), totalNodes * sizeof(double), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_network.biases, h_biases.data(), totalNodes * sizeof(double), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_network.weights, h_weights.data(), totalWeights * sizeof(double), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_network.layerSizes, h_layerSizes.data(), network.size() * sizeof(int), cudaMemcpyHostToDevice);
-
-    return 0; // Success
+    CUDA_CHECK_AND_FAULT(cudaMemcpy(deviceNetwork.values, h_values.data(), totalNodes * sizeof(double), cudaMemcpyHostToDevice));
+    CUDA_CHECK_AND_FAULT(cudaMemcpy(deviceNetwork.biases, h_biases.data(), totalNodes * sizeof(double), cudaMemcpyHostToDevice));
+    CUDA_CHECK_AND_FAULT(cudaMemcpy(deviceNetwork.weights, h_weights.data(), totalWeights * sizeof(double), cudaMemcpyHostToDevice));
+    CUDA_CHECK_AND_FAULT(cudaMemcpy(deviceNetwork.layerSizes, h_layerSizes.data(), network.size() * sizeof(int), cudaMemcpyHostToDevice));
 }
 
-inline int freeNetwork(DeviceNetwork& d_network) {
-    cudaFree(d_network.values);
-    cudaFree(d_network.biases);
-    cudaFree(d_network.weights);
-    cudaFree(d_network.layerSizes);
-
-    d_network.values = nullptr;
-    d_network.biases = nullptr;
-    d_network.weights = nullptr;
-    d_network.layerSizes = nullptr;
-
+inline int freeNetwork(DeviceNetwork& deviceNetwork) {
+    CUDA_CHECK_AND_FAULT(cudaFree(deviceNetwork.values));
+    CUDA_CHECK_AND_FAULT(cudaFree(deviceNetwork.biases));
+    CUDA_CHECK_AND_FAULT(cudaFree(deviceNetwork.weights));
+    CUDA_CHECK_AND_FAULT(cudaFree(deviceNetwork.layerSizes));
     return 0; // Success
 }
 

@@ -35,9 +35,21 @@
     <ClInclude Include="cuda files\feedforward.cuh">
       <Filter>cuda</Filter>
     </ClInclude>
+    <ClInclude Include="cuda files\backprop.cuh">
+      <Filter>cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="deviceActivation.cuh">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="cuda files\feedforward.cu">
+      <Filter>cuda</Filter>
+    </CudaCompile>
+    <CudaCompile Include="cuda files\backprop.cu">
+      <Filter>cuda</Filter>
+    </CudaCompile>
+    <CudaCompile Include="cuda files\memoryutils.cu">
       <Filter>cuda</Filter>
     </CudaCompile>
   </ItemGroup>

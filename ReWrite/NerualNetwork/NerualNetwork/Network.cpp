@@ -1,7 +1,7 @@
 ﻿#include "Network.h"
-#include "matplotlibcpp.h"
-
-namespace plt = matplotlibcpp;
+//#include "matplotlibcpp.h"
+#include "deviceActivation.cuh"
+//namespace plt = matplotlibcpp;
 
 const int numImages = 60000;
 const int imageSize = 28 * 28;
@@ -55,12 +55,8 @@ int main() {
     testImages->erase(testImages->begin(), testImages->begin() + VALIDATION_SET_SIZE);
     testLabels->erase(testLabels->begin(), testLabels->begin() + VALIDATION_SET_SIZE);
 
-    Network network(networkArchitecture, true, relu, relu_derivative);
+    Network network(networkArchitecture, device_sigmoid, device_sigmoidDerivative);
 
-    // Initialize weights and biases using Xavier initialization
-    if (network.xavierIntWeightsAndBias()) {
-        return 1;
-    }
 
     // Training loop for a specified number of epochs
     auto trainingStart = std::chrono::high_resolution_clock::now();
@@ -202,7 +198,7 @@ test:
     for (int i = 0; i < EpochAcc.size(); ++i) {
         logScaleEpoch[i] = i + 1;
     }
-
+    /*
     plt::title("Training Accuracy vs. Epochs");
     plt::xlabel("Epochs");
     plt::ylabel("Training Accuracy (%)");
@@ -228,7 +224,7 @@ test:
         plt::save("cost_vs_epochs.png");
     }
 
-    plt::show();
+    plt::show(); */
     return 0;
 }
 

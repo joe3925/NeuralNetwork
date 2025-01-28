@@ -154,6 +154,10 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>"C:\Users\boden\AppData\Local\Programs\Python\Python310\include";"C:\Users\boden\AppData\Local\Programs\Python\Python310\Lib\site-packages\numpy\core\include";$(CUDA_PATH)\include;</AdditionalIncludeDirectories>
+      <SupportJustMyCode>true</SupportJustMyCode>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -162,18 +166,34 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>$(CoreLibraryDependencies);%(AdditionalDependencies);"C:\Users\boden\AppData\Local\Programs\Python\Python310\libs\python310.lib";</AdditionalDependencies>
     </Link>
+    <CudaLink>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalOptions>-allow-unsupported-compiler %(AdditionalOptions)</AdditionalOptions>
+    </CudaLink>
+    <CudaCompile>
+      <GPUDebugInfo>true</GPUDebugInfo>
+    </CudaCompile>
+    <CudaCompile>
+      <GenerateLineInfo>true</GenerateLineInfo>
+      <HostDebugInfo>true</HostDebugInfo>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Network.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="cuda files\backprop.cuh" />
     <ClInclude Include="cuda files\feedforward.cuh" />
     <ClInclude Include="cuda files\memoryUtils.cuh" />
+    <ClInclude Include="deviceActivation.cuh" />
     <ClInclude Include="helper.h" />
     <ClInclude Include="Network.h" />
   </ItemGroup>
   <ItemGroup>
+    <CudaCompile Include="cuda files\backprop.cu" />
     <CudaCompile Include="cuda files\feedforward.cu" />
+    <CudaCompile Include="cuda files\memoryutils.cu" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

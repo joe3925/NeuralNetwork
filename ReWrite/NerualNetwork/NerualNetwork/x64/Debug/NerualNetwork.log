@@ -1,37 +1,26 @@
 ﻿C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(531,5): warning MSB8028: The intermediate directory (x64\Debug\) contains files shared from another project (NerualNetwork.vcxproj).  This can lead to incorrect clean and rebuild behavior.
+  Compiling CUDA source file cuda files\backprop.cu...
+  Compiling CUDA source file cuda files\memoryutils.cu...
+  Compiling CUDA source file cuda files\feedforward.cu...
+  
+  C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.3\bin\nvcc.exe" -gencode=arch=compute_52,code=\"sm_52,compute_52\" --use-local-env -ccbin "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.39.33519\bin\HostX64\x64" -x cu   -IC:\Users\boden\AppData\Local\Programs\Python\Python310\include -I"C:\Users\boden\AppData\Local\Programs\Python\Python310\Lib\site-packages\numpy\core\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.3\include"  -G   --keep-dir x64\Debug  -maxrregcount=0   --machine 64 --compile -cudart static  -g  -D_DEBUG -D_CONSOLE -D_UNICODE -DUNICODE -Xcompiler "/EHsc /W3 /nologo /Od /FS /Zi /RTC1 /MDd " -Xcompiler "/Fdx64\Debug\vc143.pdb" -o C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\x64\Debug\backprop.cu.obj "C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\cuda files\backprop.cu" 
+  
+  C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.3\bin\nvcc.exe" -gencode=arch=compute_52,code=\"sm_52,compute_52\" --use-local-env -ccbin "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.39.33519\bin\HostX64\x64" -x cu   -IC:\Users\boden\AppData\Local\Programs\Python\Python310\include -I"C:\Users\boden\AppData\Local\Programs\Python\Python310\Lib\site-packages\numpy\core\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.3\include"  -G   --keep-dir x64\Debug  -maxrregcount=0   --machine 64 --compile -cudart static  -g  -D_DEBUG -D_CONSOLE -D_UNICODE -DUNICODE -Xcompiler "/EHsc /W3 /nologo /Od /FS /Zi /RTC1 /MDd " -Xcompiler "/Fdx64\Debug\vc143.pdb" -o C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\x64\Debug\memoryutils.cu.obj "C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\cuda files\memoryutils.cu" 
+  
+  C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.3\bin\nvcc.exe" -gencode=arch=compute_52,code=\"sm_52,compute_52\" --use-local-env -ccbin "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.39.33519\bin\HostX64\x64" -x cu   -IC:\Users\boden\AppData\Local\Programs\Python\Python310\include -I"C:\Users\boden\AppData\Local\Programs\Python\Python310\Lib\site-packages\numpy\core\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.3\include"  -G   --keep-dir x64\Debug  -maxrregcount=0   --machine 64 --compile -cudart static  -g  -D_DEBUG -D_CONSOLE -D_UNICODE -DUNICODE -Xcompiler "/EHsc /W3 /nologo /Od /FS /Zi /RTC1 /MDd " -Xcompiler "/Fdx64\Debug\vc143.pdb" -o C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\x64\Debug\feedforward.cu.obj "C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\cuda files\feedforward.cu" 
+  memoryutils.cu
+  feedforward.cu
+  backprop.cu
+  tmpxft_0000652c_00000000-7_memoryutils.cudafe1.cpp
+  tmpxft_00006610_00000000-7_backprop.cudafe1.cpp
+C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\cuda files\memoryUtils.cuh(62): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\cuda files\memoryUtils.cuh(64): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\cuda files\memoryUtils.cuh(62): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\cuda files\memoryUtils.cuh(64): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+  tmpxft_00003b38_00000000-7_feedforward.cudafe1.cpp
+C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\cuda files\memoryUtils.cuh(62): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\cuda files\memoryUtils.cuh(64): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
   Network.cpp
-C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\Network.h(81,15): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\cuda files\memoryUtils.cuh(6,10): error C1083: Cannot open include file: 'cuda_runtime.h': No such file or directory
   (compiling source file 'Network.cpp')
   
-C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\Network.h(343,36): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-  (compiling source file 'Network.cpp')
-  
-C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\Network.cpp(247,19): warning C4244: 'initializing': conversion from '_Rep' to 'unsigned int', possible loss of data
-C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\Network.cpp(247,19): warning C4244:         with
-C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\Network.cpp(247,19): warning C4244:         [
-C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\Network.cpp(247,19): warning C4244:             _Rep=std::chrono::system_clock::rep
-C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\Network.cpp(247,19): warning C4244:         ]
-C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\Network.cpp(290,19): warning C4244: 'initializing': conversion from '_Rep' to 'unsigned int', possible loss of data
-C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\Network.cpp(290,19): warning C4244:         with
-C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\Network.cpp(290,19): warning C4244:         [
-C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\Network.cpp(290,19): warning C4244:             _Rep=std::chrono::system_clock::rep
-C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\Network.cpp(290,19): warning C4244:         ]
-C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\helper.h(7,25): warning C4244: 'return': conversion from '__int64' to 'int', possible loss of data
-  (compiling source file 'Network.cpp')
-  C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\helper.h(7,25):
-  the template instantiation context (the oldest one first) is
-  	C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\Network.h(270,31):
-  	see reference to function template instantiation 'int findLargest<double>(const std::vector<double,std::allocator<double>> &)' being compiled
-  
-C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\matplotlibcpp.h(1813,48): warning C4244: '=': conversion from 'size_t' to '_Ty', possible loss of data
-C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\matplotlibcpp.h(1813,48): warning C4244:         with
-C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\matplotlibcpp.h(1813,48): warning C4244:         [
-C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\matplotlibcpp.h(1813,48): warning C4244:             _Ty=double
-C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\matplotlibcpp.h(1813,48): warning C4244:         ]
-  (compiling source file 'Network.cpp')
-  C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\matplotlibcpp.h(1813,48):
-  the template instantiation context (the oldest one first) is
-  	C:\Users\Boden\source\repos\NeuralNetwork\ReWrite\NerualNetwork\NerualNetwork\matplotlibcpp.h(2877,12):
-  	see reference to function template instantiation 'bool matplotlibcpp::plot<double>(const std::vector<double,std::allocator<double>> &,const std::string &)' being compiled
-  
-LINK : fatal error LNK1104: cannot open file 'python310_d.lib'

@@ -24,4 +24,22 @@ int findSmallestPosition(const std::vector<T>& vec) {
 
     return smallestPosition;
 }
+#define CUDA_CHECK(call) \
+    do { \
+        cudaError_t err = call; \
+        if (err != cudaSuccess) { \
+            std::cerr << "CUDA Error: " << cudaGetErrorString(err) \
+                      << " at " << __FILE__ << ":" << __LINE__ << std::endl; \
+            \
+        } \
+    } while (0)
 
+#define CUDA_CHECK_AND_FAULT(call) \
+    do { \
+        cudaError_t err = call; \
+        if (err != cudaSuccess) { \
+            std::cerr << "CUDA Error: " << cudaGetErrorString(err) \
+                      << " at " << __FILE__ << ":" << __LINE__ << std::endl; \
+            exit(0);\
+        } \
+    } while (0)
